@@ -4,7 +4,7 @@
 
 ## Overview
 
-🖤 SableFoundation serves as a core component of the Sable framework, extending Swift's built-in types with expressive, readable APIs that prioritize developer experience. Since 🖤 SableFoundation re-exports Foundation (`@_exported import Foundation`), you only need to import 🖤 SableFoundation in your files:
+SableFoundation serves as a core component of the Sable framework, extending Swift's built-in types with expressive, readable APIs that prioritize developer experience. Since SableFoundation re-exports Foundation (`@_exported import Foundation`), you only need to import SableFoundation in your files:
 
 ```swift
 import SableFoundation  // No need to also import Foundation
@@ -18,25 +18,25 @@ import SableFoundation  // No need to also import Foundation
 
 ```swift
 // Instead of:
-let displayName = username ?? "Guest"
+let display_name = username ?? "Guest"
 
 // Use:
-let displayName = username.otherwise("Guest")
+let display_name = username.otherwise("Guest")
 ```
 
 Three variants are available:
 
 ```swift
 // With a direct default value
-let result = optionalValue.otherwise(defaultValue)
+let result = optional_value.otherwise(defaultValue)
 
 // With a closure for lazy evaluation
-let result = optionalValue.otherwise {
+let result = optional_value.otherwise {
     perform_expensive_computation()
 }
 
 // With an async closure (fully supports actors)
-let result = await optionalValue.otherwise {
+let result = await optional_value.otherwise {
     await perform_async_operation()
 }
 ```
