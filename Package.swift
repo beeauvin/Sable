@@ -16,11 +16,8 @@ let package = Package(
     .target(
       name: "Sable",
       dependencies: [],
-      path: "Sable",
-      sources: ["Sable.swift"]
+      path: "Sable"
     ),
-    .testTarget(
-      name: "SableTests", dependencies: ["Sable"], path: "Sable", sources: ["SableTests.swift"]),
 
     // SableFoundation
     .target(name: "SableFoundation", path: "SableFoundation/Source"),

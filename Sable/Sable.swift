@@ -3,8 +3,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-/// 🖤 Sable is a Swift 6+ utility library that prioritizes beautiful API design 
-/// with natural language interfaces, handling complexity internally while presenting 
+/// 🖤 Sable is a Swift 6+ utility library that prioritizes beautiful API design
+/// with natural language interfaces, handling complexity internally while presenting
 /// simplicity externally.
 ///
 /// At its core, Sable is a comprehensive reactive systems and application framework.
@@ -13,7 +13,7 @@
 /// and architectural frameworks.
 ///
 /// ## Design Philosophy
-/// 
+///
 /// - **Natural Language APIs**: Creating interfaces that read like English for clearer intent
 /// - **Progressive Disclosure**: Keeping simple things simple, with complexity opt-in
 /// - **Goal-Oriented Design**: Prioritizing developer experience over convention
@@ -25,19 +25,16 @@
 ///
 /// ## Available Modules
 ///
-/// - **🖤 Sable**: Umbrella module providing unified import
-/// - **🖤 SableFoundation**: Core Swift extensions and utilities
+/// - **Sable**: Umbrella module providing unified import
+/// - **SableFoundation**: Core Swift extensions and utilities
 ///
 /// ## Future Modules
 ///
-/// - **🖤 SablePulse**: Type-safe event messaging system
-/// - **🖤 SableFlow**: Advanced reactive programming patterns
-/// - **🖤 SableWeave**: Architectural framework for modular, testable applications
+/// - **SablePulse**: Type-safe event messaging system
+/// - **SableFlow**: Advanced reactive programming patterns
+/// - **SableWeave**: Architectural framework for modular, testable applications
 ///
 /// Compatible with Swift 6+ and Foundation across all Swift environments.
-/// 
+///
 /// For detailed usage, see individual module documentation.
-public enum Sable {
-  /// Current version of the Sable framework
-  public static let version = "0.0.1"
-}
+public enum Sable {}

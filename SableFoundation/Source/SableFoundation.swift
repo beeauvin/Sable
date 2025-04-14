@@ -12,6 +12,6 @@
 /// This module serves as a core component of the Sable framework, offering expressive
 /// extensions to built-in Swift types that prioritize readability and developer experience.
 public enum SableFoundation {
-  /// Current version of the 🖤 SableFoundation module
+  /// Current version of the SableFoundation module
   public static let version = "0.1.0"
 }
