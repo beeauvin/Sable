@@ -37,7 +37,4 @@
 /// Compatible with Swift 6+ and Foundation across all Swift environments.
 ///
 /// For detailed usage, see individual module documentation.
-public enum Sable {
-  /// Current version of the Sable framework
-  public static let version = "0.0.1"
-}
+public enum Sable {}
