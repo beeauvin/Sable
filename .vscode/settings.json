@@ -1,0 +1,22 @@
+{
+  "editor.tabSize": 2,
+  "[swift]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.detectIndentation": false,
+    "editor.defaultFormatter": "swiftlang.swift-vscode"
+  },
+  "files.exclude": {
+    "**/.build": true,
+    "**/.swiftpm": true,
+    "**/xcuserdata": true,
+    "**/*.xcodeproj": false,
+    "**/.DS_Store": true
+  },
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.swift": "${capture}.swift.gyb, ${capture}Tests.swift",
+    "Package.swift": "Package.resolved"
+  }
+}

@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "name": "Debug Sable",
+            "program": "${workspaceFolder}/.build/debug/Sable",
+            "preLaunchTask": "swift: Build Debug Sable"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "name": "Release Sable",
+            "program": "${workspaceFolder}/.build/release/Sable",
+            "preLaunchTask": "swift: Build Release Sable"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug SableFoundation Tests",
+            "program": "${workspaceFolder}/.build/debug/SableFoundationTests.xctest",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "swift: Build All"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Sable Tests",
+            "program": "${workspaceFolder}/.build/debug/SableTests.xctest",
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "swift: Build All"
+        }
+    ]
+}

@@ -1,0 +1,104 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Format Swift Code",
+            "type": "shell",
+            "command": "swift-format",
+            "args": [
+                "format",
+                "--recursive",
+                "--parallel",
+                "--in-place",
+                "./"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "swift: Build Debug Sable",
+            "type": "shell",
+            "command": "swift build",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "swift: Build Release Sable",
+            "type": "shell",
+            "command": "swift build -c release",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "swift: Build All",
+            "type": "swift",
+            "args": [
+                "build",
+                "--build-tests",
+                "-Xswiftc",
+                "-diagnostic-style=llvm"
+            ],
+            "env": {},
+            "cwd": "${workspaceFolder}",
+            "disableTaskQueue": true,
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "detail": "swift build --build-tests -Xswiftc -diagnostic-style=llvm"
+        },
+        {
+            "label": "swift: Run All Tests",
+            "type": "shell",
+            "command": "swift test",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "swift: Clean Build Folder",
+            "type": "shell",
+            "command": "swift package clean",
+            "group": "none",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "swift: Generate Xcode Project",
+            "type": "shell",
+            "command": "swift package generate-xcodeproj",
+            "group": "none",
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
