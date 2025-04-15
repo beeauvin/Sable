@@ -1,10 +1,16 @@
 # 🖤 SableFoundation
 
-🖤 SableFoundation is a drop-in replacement for Swift's Foundation library, providing elegant natural language extensions and utilities that enhance the standard Swift types.
+🖤 SableFoundation is a drop-in replacement for Swift's Foundation library,
+providing elegant natural language extensions and utilities that enhance the
+standard Swift types.
 
 ## Overview
 
-SableFoundation serves as a core component of the Sable framework, extending Swift's built-in types with expressive, readable APIs that prioritize developer experience. Since SableFoundation re-exports Foundation (`@_exported import Foundation`), you only need to import SableFoundation in your files:
+SableFoundation serves as a core component of the Sable framework, extending
+Swift's built-in types with expressive, readable APIs that prioritize developer
+experience. Since SableFoundation re-exports Foundation
+(`@_exported import Foundation`), you only need to import SableFoundation in
+your files:
 
 ```swift
 import SableFoundation  // No need to also import Foundation
