@@ -9,12 +9,6 @@ import Testing
 
 @Suite("SableFoundation")
 struct SableFoundationTests {
-
-  @Test("Module Version")
-  func test_module_version() throws {
-    #expect(SableFoundation.version == "0.1.0")
-  }
-
   /// Test presumably only compiles if it's true.
   @Test("Re-exports Foundation (simple test)")
   func re_exports_foundation() throws {

@@ -144,13 +144,18 @@ struct OptionalTransformTests {
   func async_transform_returns_transformed_value_when_non_nil() async throws {
     // Given
     let optional: String? = "Hello"
+    var tracker = ClosureTracker()
     
-    // When
-    let result = await optional.transform { string async in
-      return string.count
+    func async_transform(_ input: String) async -> Int {
+      tracker.track()
+      return input.count
     }
     
+    // When
+    let result = await optional.transform(async_transform)
+    
     // Then
+    tracker.verify(called: true, message: "Async transform should be called for non-nil value")
     #expect(result == 5)
   }
   
@@ -158,13 +163,18 @@ struct OptionalTransformTests {
   func async_transform_returns_nil_when_original_is_nil() async throws {
     // Given
     let optional: String? = nil
+    var tracker = ClosureTracker()
     
-    // When
-    let result = await optional.transform { string async in
-      return string.count
+    func async_transform(_ input: String) async -> Int {
+      tracker.track()
+      return input.count
     }
     
+    // When
+    let result = await optional.transform(async_transform)
+    
     // Then
+    tracker.verify(called: false, message: "Async transform should not be called for nil value")
     #expect(result == nil)
   }
   
@@ -172,13 +182,18 @@ struct OptionalTransformTests {
   func async_transform_optional_returns_transformed_value_when_non_nil() async throws {
     // Given
     let optional: String? = "42"
+    var tracker = ClosureTracker()
     
-    // When
-    let result = await optional.transform { string async in
-      return Int(string)
+    func async_transform(_ input: String) async -> Int? {
+      tracker.track()
+      return Int(input)
     }
     
+    // When
+    let result = await optional.transform(async_transform)
+    
     // Then
+    tracker.verify(called: true, message: "Async optional transform should be called for non-nil value")
     #expect(result == 42)
   }
   
@@ -186,13 +201,18 @@ struct OptionalTransformTests {
   func async_transform_optional_returns_nil_when_original_is_nil() async throws {
     // Given
     let optional: String? = nil
+    var tracker = ClosureTracker()
     
-    // When
-    let result = await optional.transform { string async in
-      return Int(string)
+    func async_transform(_ input: String) async -> Int? {
+      tracker.track()
+      return Int(input)
     }
     
+    // When
+    let result = await optional.transform(async_transform)
+    
     // Then
+    tracker.verify(called: false, message: "Async optional transform should not be called for nil value")
     #expect(result == nil)
   }
   
@@ -200,13 +220,18 @@ struct OptionalTransformTests {
   func async_transform_optional_returns_nil_when_transformation_fails() async throws {
     // Given
     let optional: String? = "not a number"
+    var tracker = ClosureTracker()
     
-    // When
-    let result = await optional.transform { string async in
-      return Int(string)
+    func async_transform(_ input: String) async -> Int? {
+      tracker.track()
+      return Int(input)
     }
     
+    // When
+    let result = await optional.transform(async_transform)
+    
     // Then
+    tracker.verify(called: true, message: "Async optional transform should be called even if it will fail")
     #expect(result == nil)
   }
   
@@ -215,35 +240,22 @@ struct OptionalTransformTests {
   @Test("async transform works with actor isolation")
   func async_transform_works_with_actors() async throws {
     // Given
-    actor TestActor {
-      private var call_count = 0
-      
-      func compute_value(_ input: Int) -> Int {
-        call_count += 1
-        return input * 2
-      }
-      
-      func get_call_count() -> Int {
-        return call_count
-      }
-    }
-    
     let actor = TestActor()
     
     // Test with non-nil optional
-    let optional_with_value: Int? = 21
-    let result_with_value = await optional_with_value.transform { number in
-      await actor.compute_value(number)
+    let optional_with_value: String? = "value"
+    let result_with_value = await optional_with_value.transform { value in
+      await actor.compute_string_value(value)
     }
     
     // Test with nil optional
-    let optional_nil: Int? = nil
-    let result_nil = await optional_nil.transform { number in
-      await actor.compute_value(number)
+    let optional_nil: String? = nil
+    let result_nil = await optional_nil.transform { value in
+      await actor.compute_string_value(value)
     }
     
     // Then
-    #expect(result_with_value == 42)
+    #expect(result_with_value == "VALUE")
     #expect(result_nil == nil)
     #expect(await actor.get_call_count() == 1, "Actor should be called only once (for non-nil case)")
   }

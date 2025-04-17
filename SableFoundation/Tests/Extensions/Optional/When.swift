@@ -16,18 +16,18 @@ struct OptionalWhenTests {
   func when_something_executes_with_wrapped_value_when_non_nil() throws {
     // Given
     let optional: String? = "Value"
-    var closure_called = false
+    var tracker = ClosureTracker()
     var passed_value = ""
     
     // When
     let result = optional.when(something: { value in
-      closure_called = true
+      tracker.track()
       passed_value = value
       return value.uppercased()
     })
     
     // Then
-    #expect(closure_called, "Closure should be called when optional has a value")
+    tracker.verify(called: true, message: "Closure should be called when optional has a value")
     #expect(passed_value == "Value", "Wrapped value should be passed to closure")
     #expect(result == "VALUE", "Result should be the closure's return value")
   }
@@ -36,16 +36,16 @@ struct OptionalWhenTests {
   func when_something_returns_nil_when_optional_is_nil() throws {
     // Given
     let optional: String? = nil
-    var closure_called = false
+    var tracker = ClosureTracker()
     
     // When
     let result = optional.when(something: { value in
-      closure_called = true
+      tracker.track()
       return value.uppercased()
     })
     
     // Then
-    #expect(!closure_called, "Closure should not be called when optional is nil")
+    tracker.verify(called: false, message: "Closure should not be called when optional is nil")
     #expect(result == nil, "Result should be nil when optional is nil")
   }
   
@@ -55,30 +55,30 @@ struct OptionalWhenTests {
   func when_nothing_executes_closure_when_optional_is_nil() throws {
     // Given
     let optional: String? = nil
-    var closure_called = false
+    var tracker = ClosureTracker()
     
     // When
     optional.when(nothing: {
-      closure_called = true
+      tracker.track()
     })
     
     // Then
-    #expect(closure_called, "Closure should be called when optional is nil")
+    tracker.verify(called: true, message: "Closure should be called when optional is nil")
   }
   
   @Test("when(nothing:) does not execute closure when optional is non-nil")
   func when_nothing_does_not_execute_closure_when_optional_is_non_nil() throws {
     // Given
     let optional: String? = "Value"
-    var closure_called = false
+    var tracker = ClosureTracker()
     
     // When
     optional.when(nothing: {
-      closure_called = true
+      tracker.track()
     })
     
     // Then
-    #expect(!closure_called, "Closure should not be called when optional has a value")
+    tracker.verify(called: false, message: "Closure should not be called when optional has a value")
   }
   
   // MARK: - When Something or Nothing Tests
@@ -87,24 +87,24 @@ struct OptionalWhenTests {
   func when_something_nothing_executes_something_when_non_nil() throws {
     // Given
     let optional: String? = "Value"
-    var something_called = false
-    var nothing_called = false
+    var something_tracker = ClosureTracker()
+    var nothing_tracker = ClosureTracker()
     
     // When
     let result = optional.when(
       something: { value in
-        something_called = true
+        something_tracker.track()
         return value.uppercased()
       },
       nothing: {
-        nothing_called = true
+        nothing_tracker.track()
         return "DEFAULT"
       }
     )
     
     // Then
-    #expect(something_called, "Something closure should be called when optional has a value")
-    #expect(!nothing_called, "Nothing closure should not be called when optional has a value")
+    something_tracker.verify(called: true, message: "Something closure should be called when optional has a value")
+    nothing_tracker.verify(called: false, message: "Nothing closure should not be called when optional has a value")
     #expect(result == "VALUE", "Result should be from the something closure")
   }
   
@@ -112,24 +112,24 @@ struct OptionalWhenTests {
   func when_something_nothing_executes_nothing_when_nil() throws {
     // Given
     let optional: String? = nil
-    var something_called = false
-    var nothing_called = false
+    var something_tracker = ClosureTracker()
+    var nothing_tracker = ClosureTracker()
     
     // When
     let result = optional.when(
       something: { value in
-        something_called = true
+        something_tracker.track()
         return value.uppercased()
       },
       nothing: {
-        nothing_called = true
+        nothing_tracker.track()
         return "DEFAULT"
       }
     )
     
     // Then
-    #expect(!something_called, "Something closure should not be called when optional is nil")
-    #expect(nothing_called, "Nothing closure should be called when optional is nil")
+    something_tracker.verify(called: false, message: "Something closure should not be called when optional is nil")
+    nothing_tracker.verify(called: true, message: "Nothing closure should be called when optional is nil")
     #expect(result == "DEFAULT", "Result should be from the nothing closure")
   }
   
@@ -139,18 +139,20 @@ struct OptionalWhenTests {
   func async_when_something_executes_with_wrapped_value_when_non_nil() async throws {
     // Given
     let optional: String? = "Value"
-    var closure_called = false
+    var tracker = ClosureTracker()
     var passed_value = ""
     
-    // When
-    let result = await optional.when(something: { value async in
-      closure_called = true
+    func async_handler(_ value: String) async -> String {
+      tracker.track()
       passed_value = value
       return value.uppercased()
-    })
+    }
+    
+    // When
+    let result = await optional.when(something: async_handler)
     
     // Then
-    #expect(closure_called, "Async closure should be called when optional has a value")
+    tracker.verify(called: true, message: "Async closure should be called when optional has a value")
     #expect(passed_value == "Value", "Wrapped value should be passed to async closure")
     #expect(result == "VALUE", "Result should be the async closure's return value")
   }
@@ -159,16 +161,18 @@ struct OptionalWhenTests {
   func async_when_something_returns_nil_when_optional_is_nil() async throws {
     // Given
     let optional: String? = nil
-    var closure_called = false
+    var tracker = ClosureTracker()
+    
+    func async_handler(_ value: String) async -> String {
+      tracker.track()
+      return value.uppercased()
+    }
     
     // When
-    let result = await optional.when(something: { value async in
-      closure_called = true
-      return value.uppercased()
-    })
+    let result = await optional.when(something: async_handler)
     
     // Then
-    #expect(!closure_called, "Async closure should not be called when optional is nil")
+    tracker.verify(called: false, message: "Async closure should not be called when optional is nil")
     #expect(result == nil, "Result should be nil when optional is nil")
   }
   
@@ -178,34 +182,34 @@ struct OptionalWhenTests {
   func async_when_nothing_executes_closure_when_optional_is_nil() async throws {
     // Given
     let optional: String? = nil
-    var closure_called = false
+    var tracker = ClosureTracker()
     
-    func async_closure() async {
-      closure_called = true
+    func async_nothing() async {
+      tracker.track()
     }
     
     // When
-    await optional.when(nothing: async_closure)
+    await optional.when(nothing: async_nothing)
     
     // Then
-    #expect(closure_called, "Async closure should be called when optional is nil")
+    tracker.verify(called: true, message: "Async closure should be called when optional is nil")
   }
   
   @Test("async when(nothing:) does not execute closure when optional is non-nil")
   func async_when_nothing_does_not_execute_closure_when_optional_is_non_nil() async throws {
     // Given
     let optional: String? = "Value"
-    var closure_called = false
+    var tracker = ClosureTracker()
     
-    func async_closure() async {
-      closure_called = true
+    func async_nothing() async {
+      tracker.track()
     }
     
     // When
-    await optional.when(nothing: async_closure)
+    await optional.when(nothing: async_nothing)
     
     // Then
-    #expect(!closure_called, "Async closure should not be called when optional has a value")
+    tracker.verify(called: false, message: "Async closure should not be called when optional has a value")
   }
   
   // MARK: - Async When Something or Nothing Tests
@@ -214,24 +218,28 @@ struct OptionalWhenTests {
   func async_when_something_nothing_executes_something_when_non_nil() async throws {
     // Given
     let optional: String? = "Value"
-    var something_called = false
-    var nothing_called = false
+    var something_tracker = ClosureTracker()
+    var nothing_tracker = ClosureTracker()
+    
+    func async_something(_ value: String) async -> String {
+      something_tracker.track()
+      return value.uppercased()
+    }
+    
+    func async_nothing() async -> String {
+      nothing_tracker.track()
+      return "DEFAULT"
+    }
     
     // When
     let result = await optional.when(
-      something: { value async in
-        something_called = true
-        return value.uppercased()
-      },
-      nothing: {
-        nothing_called = true
-        return "DEFAULT"
-      }
+      something: async_something,
+      nothing: async_nothing
     )
     
     // Then
-    #expect(something_called, "Something async closure should be called when optional has a value")
-    #expect(!nothing_called, "Nothing async closure should not be called when optional has a value")
+    something_tracker.verify(called: true, message: "Something async closure should be called when optional has a value")
+    nothing_tracker.verify(called: false, message: "Nothing async closure should not be called when optional has a value")
     #expect(result == "VALUE", "Result should be from the something async closure")
   }
   
@@ -239,24 +247,28 @@ struct OptionalWhenTests {
   func async_when_something_nothing_executes_nothing_when_nil() async throws {
     // Given
     let optional: String? = nil
-    var something_called = false
-    var nothing_called = false
+    var something_tracker = ClosureTracker()
+    var nothing_tracker = ClosureTracker()
+    
+    func async_something(_ value: String) async -> String {
+      something_tracker.track()
+      return value.uppercased()
+    }
+    
+    func async_nothing() async -> String {
+      nothing_tracker.track()
+      return "DEFAULT"
+    }
     
     // When
     let result = await optional.when(
-      something: { value async in
-        something_called = true
-        return value.uppercased()
-      },
-      nothing: {
-        nothing_called = true
-        return "DEFAULT"
-      }
+      something: async_something,
+      nothing: async_nothing
     )
     
     // Then
-    #expect(!something_called, "Something async closure should not be called when optional is nil")
-    #expect(nothing_called, "Nothing async closure should be called when optional is nil")
+    something_tracker.verify(called: false, message: "Something async closure should not be called when optional is nil")
+    nothing_tracker.verify(called: true, message: "Nothing async closure should be called when optional is nil")
     #expect(result == "DEFAULT", "Result should be from the nothing async closure")
   }
   
@@ -265,34 +277,16 @@ struct OptionalWhenTests {
   @Test("async when works with actor isolation")
   func async_when_works_with_actors() async throws {
     // Given
-    actor TestActor {
-      private var call_count = 0
-      
-      func compute_value(_ input: String) -> String {
-        call_count += 1
-        return input.uppercased()
-      }
-      
-      func compute_default() -> String {
-        call_count += 1
-        return "DEFAULT"
-      }
-      
-      func get_call_count() -> Int {
-        return call_count
-      }
-    }
-    
     let actor = TestActor()
     
     // Test with non-nil optional
     let optional_with_value: String? = "value"
     let result_with_value = await optional_with_value.when(
       something: { value in
-        await actor.compute_value(value)
+        await actor.compute_string_value(value)
       },
       nothing: {
-        await actor.compute_default()
+        await actor.compute_default_string()
       }
     )
     
@@ -300,10 +294,10 @@ struct OptionalWhenTests {
     let optional_nil: String? = nil
     let result_nil = await optional_nil.when(
       something: { value in
-        await actor.compute_value(value)
+        await actor.compute_string_value(value)
       },
       nothing: {
-        await actor.compute_default()
+        await actor.compute_default_string()
       }
     )
     
