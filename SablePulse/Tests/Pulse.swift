@@ -8,7 +8,7 @@ import SableFoundation
 
 @testable import SablePulse
 
-@Suite("SablePulse/Pulse")
+@Suite("SablePulse/Core: Pulse")
 struct PulseTests {
   
   // MARK: - Test Data
@@ -17,212 +17,244 @@ struct PulseTests {
     let value: String
   }
   
+  func create_test_data() -> TestPulseData {
+    return TestPulseData(value: "Test Value")
+  }
+  
   // MARK: - Protocol Conformance Tests
   
-  @Test("Pulse conforms to Pulsable")
-  func pulse_conforms_to_pulsable() throws {
-    // Given
+  @Test("conforms to Pulsable")
+  func conforms_to_pulsable() throws {
     let is_pulsable = (Pulse<TestPulseData>.self as Any) is any Pulsable.Type
-    
-    // Then
     #expect(is_pulsable)
   }
   
-  @Test("Pulse conforms to Representable")
-  func pulse_conforms_to_representable() throws {
-    // Given
+  @Test("conforms to Representable")
+  func conforms_to_representable() throws {
     let is_representable = (Pulse<TestPulseData>.self as Any) is any Representable.Type
-    
-    // Then
     #expect(is_representable)
   }
   
   // MARK: - Initialization Tests
   
-  @Test("init(_:) creates pulse with provided data")
-  func init_creates_pulse_with_provided_data() throws {
-    // Given
-    let test_data = TestPulseData(value: "Test Value")
-    
-    // When
+  @Test("initialization creates pulse with provided data")
+  func initialization_creates_pulse_with_provided_data() throws {
+    let test_data = create_test_data()
     let pulse = Pulse(test_data)
     
-    // Then
     #expect(pulse.data.value == "Test Value")
   }
   
-  @Test("init(_:) creates pulse with default metadata")
-  func init_creates_pulse_with_default_metadata() throws {
-    // Given
-    let test_data = TestPulseData(value: "Test Value")
+  @Test("initialization assigns unique id")
+  func initialization_assigns_unique_id() throws {
+    let test_data = create_test_data()
     
-    // When
-    let pulse = Pulse(test_data)
-    
-    // Then
-    #expect(!pulse.meta.debug, "Debug should default to false")
-    #expect(pulse.meta.source == .none, "Source should default to none")
-    #expect(pulse.meta.echoes == .none, "Echoes should default to none")
-    #expect(pulse.meta.priority == TaskPriority.medium.rawValue, "Priority should default to medium")
-    #expect(pulse.meta.tags.isEmpty, "Tags should default to empty set")
-  }
-  
-  @Test("init(_:) creates pulse with unique id")
-  func init_creates_pulse_with_unique_id() throws {
-    // Given
-    let test_data = TestPulseData(value: "Test Value")
-    
-    // When
     let pulse1 = Pulse(test_data)
     let pulse2 = Pulse(test_data)
     
-    // Then
-    #expect(pulse1.id != pulse2.id, "Each pulse should have a unique ID")
+    #expect(pulse1.id != pulse2.id)
   }
   
-  @Test("init(_:) creates pulse with current timestamp")
-  func init_creates_pulse_with_current_timestamp() throws {
-    // Given
+  @Test("initialization sets timestamp to current time")
+  func initialization_sets_timestamp_to_current_time() throws {
     let before = Date()
-    
-    // When
-    let pulse = Pulse(TestPulseData(value: "Test Value"))
+    let pulse = Pulse(create_test_data())
     let after = Date()
     
-    // Then
-    #expect(pulse.timestamp >= before, "Timestamp should be after or equal to before creation")
-    #expect(pulse.timestamp <= after, "Timestamp should be before or equal to after creation")
+    #expect(pulse.timestamp >= before)
+    #expect(pulse.timestamp <= after)
+  }
+  
+  @Test("initialization creates default metadata with debug disabled")
+  func initialization_creates_default_metadata_with_debug_disabled() throws {
+    let pulse = Pulse(create_test_data())
+    #expect(!pulse.meta.debug)
+  }
+  
+  @Test("initialization creates default metadata with nil source")
+  func initialization_creates_default_metadata_with_nil_source() throws {
+    let pulse = Pulse(create_test_data())
+    #expect(pulse.meta.source == nil)
+  }
+  
+  @Test("initialization creates default metadata with nil echoes")
+  func initialization_creates_default_metadata_with_nil_echoes() throws {
+    let pulse = Pulse(create_test_data())
+    #expect(pulse.meta.echoes == nil)
+  }
+  
+  @Test("initialization creates default metadata with medium priority")
+  func initialization_creates_default_metadata_with_medium_priority() throws {
+    let pulse = Pulse(create_test_data())
+    #expect(pulse.meta.priority == TaskPriority.medium.rawValue)
+  }
+  
+  @Test("initialization creates default metadata with empty tags")
+  func initialization_creates_default_metadata_with_empty_tags() throws {
+    let pulse = Pulse(create_test_data())
+    #expect(pulse.meta.tags.isEmpty)
   }
   
   // MARK: - Property Tests
   
-  @Test("name property returns formatted type name")
-  func name_property_returns_formatted_type_name() throws {
-    // Given
-    let pulse = Pulse(TestPulseData(value: "Test Value"))
+  @Test("name returns formatted type name")
+  func name_returns_formatted_type_name() throws {
+    let pulse = Pulse(create_test_data())
     
-    // When
-    let name = pulse.name
-    
-    // Then
-    #expect(name == "Pulse:TestPulseData")
+    #expect(pulse.name == "Pulse:TestPulseData")
   }
   
-  @Test("priority property returns strongly-typed TaskPriority")
-  func priority_property_returns_strongly_typed_task_priority() throws {
-    // Given
-    let test_data = TestPulseData(value: "Test Value")
-    let pulse = Pulse(test_data)
+  @Test("priority returns strongly-typed TaskPriority")
+  func priority_returns_strongly_typed_task_priority() throws {
+    let pulse = Pulse(create_test_data())
     
-    // When
-    let priority = pulse.priority
-    
-    // Then
-    #expect(priority == .medium, "Default priority should be medium")
-    #expect(type(of: priority) == TaskPriority.self, "Priority should be TaskPriority type")
+    #expect(pulse.priority == .medium)
+    #expect(type(of: pulse.priority) == TaskPriority.self)
   }
   
   @Test("description combines name and id")
   func description_combines_name_and_id() throws {
-    // Given
-    let pulse = Pulse(TestPulseData(value: "Test Value"))
+    let pulse = Pulse(create_test_data())
     
-    // When
-    let description = pulse.description
-    
-    // Then
-    #expect(description == "\(pulse.name):\(pulse.id)")
-  }
-  
-  // MARK: - Fluent Builder Tests
-  
-  @Test("Fluently(_:meta:) creates new pulse with same id and timestamp")
-  func fluently_creates_new_pulse_with_same_id_and_timestamp() throws {
-    // Given
-    let original = Pulse(TestPulseData(value: "Original"))
-    let new_meta = PulseMeta(debug: true)
-    
-    // When
-    let modified = Pulse.Fluently(original, meta: new_meta)
-    
-    // Then
-    #expect(modified.id == original.id, "ID should remain the same")
-    #expect(modified.timestamp == original.timestamp, "Timestamp should remain the same")
-  }
-  
-  @Test("Fluently(_:meta:) creates new pulse with same data")
-  func fluently_creates_new_pulse_with_same_data() throws {
-    // Given
-    let original_data = TestPulseData(value: "Original")
-    let original = Pulse(original_data)
-    let new_meta = PulseMeta(debug: true)
-    
-    // When
-    let modified = Pulse.Fluently(original, meta: new_meta)
-    
-    // Then
-    #expect(modified.data.value == original.data.value, "Data should remain the same")
-  }
-  
-  @Test("Fluently(_:meta:) creates new pulse with updated metadata")
-  func fluently_creates_new_pulse_with_updated_metadata() throws {
-    // Given
-    let original = Pulse(TestPulseData(value: "Original"))
-    let new_meta = PulseMeta(debug: true, priority: .high, tags: ["test"])
-    
-    // When
-    let modified = Pulse.Fluently(original, meta: new_meta)
-    
-    // Then
-    #expect(modified.meta.debug == true, "Debug flag should be updated")
-    #expect(modified.meta.priority == TaskPriority.high.rawValue, "Priority should be updated")
-    #expect(modified.meta.tags.contains("test"), "Tags should be updated")
+    #expect(pulse.description == "\(pulse.name):\(pulse.id)")
   }
   
   // MARK: - Serialization Tests
   
-  @Test("Pulse can be encoded and decoded")
-  func pulse_can_be_encoded_and_decoded() throws {
-    // Given
-    let original = Pulse(TestPulseData(value: "Test Value"))
+  @Test("can be encoded to JSON")
+  func can_be_encoded_to_json() throws {
+    let pulse = Pulse(create_test_data())
+    let encoder = JSONEncoder()
+    
+    // Should not throw
+    let _ = try encoder.encode(pulse)
+  }
+  
+  @Test("can be decoded from JSON")
+  func can_be_decoded_from_json() throws {
+    let original = Pulse(create_test_data())
     let encoder = JSONEncoder()
     let decoder = JSONDecoder()
     
-    // When
     let data = try encoder.encode(original)
     let decoded = try decoder.decode(Pulse<TestPulseData>.self, from: data)
     
-    // Then
     #expect(decoded.id == original.id)
     #expect(decoded.timestamp.timeIntervalSince1970 == original.timestamp.timeIntervalSince1970)
     #expect(decoded.data.value == original.data.value)
-    #expect(decoded.meta.debug == original.meta.debug)
-    #expect(decoded.meta.priority == original.meta.priority)
-    #expect(decoded.meta.tags == original.meta.tags)
+  }
+  
+  @Test("preserves metadata debug flag when serialized")
+  func preserves_metadata_debug_flag_when_serialized() throws {
+    // Create a pulse with non-default metadata for testing
+    let original = Pulse(create_test_data())
+    let meta = PulseMeta(debug: true)
+    let modified = Pulse(id: original.id, timestamp: original.timestamp, data: original.data, meta: meta)
+    
+    let encoder = JSONEncoder()
+    let decoder = JSONDecoder()
+    
+    let data = try encoder.encode(modified)
+    let decoded = try decoder.decode(Pulse<TestPulseData>.self, from: data)
+    
+    #expect(decoded.meta.debug == true)
+  }
+  
+  @Test("preserves metadata priority when serialized")
+  func preserves_metadata_priority_when_serialized() throws {
+    // Create a pulse with non-default metadata for testing
+    let original = Pulse(create_test_data())
+    let meta = PulseMeta(priority: .high)
+    let modified = Pulse(id: original.id, timestamp: original.timestamp, data: original.data, meta: meta)
+    
+    let encoder = JSONEncoder()
+    let decoder = JSONDecoder()
+    
+    let data = try encoder.encode(modified)
+    let decoded = try decoder.decode(Pulse<TestPulseData>.self, from: data)
+    
+    #expect(decoded.meta.priority == TaskPriority.high.rawValue)
+  }
+  
+  @Test("preserves metadata tags when serialized")
+  func preserves_metadata_tags_when_serialized() throws {
+    // Create a pulse with non-default metadata for testing
+    let original = Pulse(create_test_data())
+    let meta = PulseMeta(tags: ["test", "serialization"])
+    let modified = Pulse(id: original.id, timestamp: original.timestamp, data: original.data, meta: meta)
+    
+    let encoder = JSONEncoder()
+    let decoder = JSONDecoder()
+    
+    let data = try encoder.encode(modified)
+    let decoded = try decoder.decode(Pulse<TestPulseData>.self, from: data)
+    
+    #expect(decoded.meta.tags.contains("test"))
+    #expect(decoded.meta.tags.contains("serialization"))
+    #expect(decoded.meta.tags.count == 2)
   }
   
   // MARK: - Equality Tests
   
-  @Test("Equal Pulse instances compare as equal")
-  func equal_pulse_instances_compare_as_equal() throws {
-    // Given
-    let data = TestPulseData(value: "Test")
+  @Test("instances with same properties are equal")
+  func instances_with_same_properties_are_equal() throws {
+    // Create two pulse instances with identical properties
+    let id = UUID()
+    let timestamp = Date()
+    let data = create_test_data()
+    let meta = PulseMeta()
     
-    // When
-    let pulse1 = Pulse(data)
-    let pulse2 = Pulse.Fluently(pulse1, meta: pulse1.meta)
+    let pulse1 = Pulse(id: id, timestamp: timestamp, data: data, meta: meta)
+    let pulse2 = Pulse(id: id, timestamp: timestamp, data: data, meta: meta)
     
-    // Then
     #expect(pulse1 == pulse2)
   }
   
-  @Test("Different Pulse instances compare as not equal")
-  func different_pulse_instances_compare_as_not_equal() throws {
-    // Given
-    let pulse1 = Pulse(TestPulseData(value: "Test 1"))
-    let pulse2 = Pulse(TestPulseData(value: "Test 2"))
+  @Test("instances with different ids are not equal")
+  func instances_with_different_ids_are_not_equal() throws {
+    let timestamp = Date()
+    let data = create_test_data()
+    let meta = PulseMeta()
     
-    // Then
+    let pulse1 = Pulse(id: UUID(), timestamp: timestamp, data: data, meta: meta)
+    let pulse2 = Pulse(id: UUID(), timestamp: timestamp, data: data, meta: meta)
+    
+    #expect(pulse1 != pulse2)
+  }
+  
+  @Test("instances with different timestamps are not equal")
+  func instances_with_different_timestamps_are_not_equal() throws {
+    let id = UUID()
+    let data = create_test_data()
+    let meta = PulseMeta()
+    
+    let pulse1 = Pulse(id: id, timestamp: Date(), data: data, meta: meta)
+    let pulse2 = Pulse(id: id, timestamp: Date(timeIntervalSinceNow: 100), data: data, meta: meta)
+    
+    #expect(pulse1 != pulse2)
+  }
+  
+  @Test("instances with different data are not equal")
+  func instances_with_different_data_are_not_equal() throws {
+    let id = UUID()
+    let timestamp = Date()
+    let meta = PulseMeta()
+    
+    let pulse1 = Pulse(id: id, timestamp: timestamp, data: TestPulseData(value: "Value 1"), meta: meta)
+    let pulse2 = Pulse(id: id, timestamp: timestamp, data: TestPulseData(value: "Value 2"), meta: meta)
+    
+    #expect(pulse1 != pulse2)
+  }
+  
+  @Test("instances with different metadata are not equal")
+  func instances_with_different_metadata_are_not_equal() throws {
+    let id = UUID()
+    let timestamp = Date()
+    let data = create_test_data()
+    
+    let pulse1 = Pulse(id: id, timestamp: timestamp, data: data, meta: PulseMeta(debug: true))
+    let pulse2 = Pulse(id: id, timestamp: timestamp, data: data, meta: PulseMeta(debug: false))
+    
     #expect(pulse1 != pulse2)
   }
 }

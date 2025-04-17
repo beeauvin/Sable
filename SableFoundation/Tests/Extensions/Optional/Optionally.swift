@@ -71,66 +71,51 @@ struct OptionalOptionallyTests {
   func optionally_closure_returns_wrapped_value_when_non_nil() throws {
     // Given
     let optional: Int? = 42
-    var closure_called = false
+    var tracker = ClosureTracker()
     
     // When
     let result = optional.optionally {
-      closure_called = true
+      tracker.track()
       return 99
     }
     
     // Then
+    tracker.verify(called: false, message: "Closure should not be called when optional has a value")
     #expect(result == 42)
-    #expect(!closure_called, "Closure should not be called when optional has a value")
   }
   
   @Test("optionally(closure:) evaluates and returns closure result when nil")
   func optionally_closure_evaluates_closure_when_nil() throws {
     // Given
     let optional: Int? = nil
-    var closure_called = false
+    var tracker = ClosureTracker()
     
     // When
     let result = optional.optionally {
-      closure_called = true
+      tracker.track()
       return 99
     }
     
     // Then
+    tracker.verify(called: true, message: "Closure should be called when optional is nil")
     #expect(result == 99)
-    #expect(closure_called, "Closure should be called when optional is nil")
   }
   
   @Test("optionally(closure:) returns nil when closure returns nil")
   func optionally_closure_returns_nil_when_closure_returns_nil() throws {
     // Given
     let optional: Int? = nil
-    var closure_called = false
+    var tracker = ClosureTracker()
     
     // When
     let result = optional.optionally {
-      closure_called = true
+      tracker.track()
       return nil
     }
     
     // Then
+    tracker.verify(called: true, message: "Closure should be called when optional is nil")
     #expect(result == nil)
-    #expect(closure_called, "Closure should be called when optional is nil")
-  }
-  
-  @Test("optionally(closure:) chains with otherwise for guaranteed values")
-  func optionally_closure_chains_with_otherwise_for_guaranteed_values() throws {
-    // Given
-    let optional: Int? = nil
-    let default_value = 42
-    
-    // When
-    let result = optional.optionally {
-      return nil
-    }.otherwise(default_value)
-    
-    // Then
-    #expect(result == default_value)
   }
   
   // MARK: - Async Optionally Tests
@@ -139,115 +124,81 @@ struct OptionalOptionallyTests {
   func optionally_async_returns_wrapped_value_when_non_nil() async throws {
     // Given
     let optional: Double? = 3.14
-    var closure_called = false
+    var tracker = ClosureTracker()
     
-    func async_closure() async -> Double? {
-      closure_called = true
+    func async_provider() async -> Double? {
+      tracker.track()
       return 2.71
     }
     
     // When
-    let result = await optional.optionally(async_closure)
+    let result = await optional.optionally(async_provider)
     
     // Then
+    tracker.verify(called: false, message: "Async closure should not be called when optional has a value")
     #expect(result == 3.14)
-    #expect(!closure_called, "Async closure should not be called when optional has a value")
   }
   
   @Test("optionally(async_closure:) awaits and returns closure result when nil")
   func optionally_async_evaluates_closure_when_nil() async throws {
     // Given
     let optional: Double? = nil
-    var closure_called = false
+    var tracker = ClosureTracker()
     
-    func async_closure() async -> Double? {
-      closure_called = true
+    func async_provider() async -> Double? {
+      tracker.track()
       return 2.71
     }
     
     // When
-    let result = await optional.optionally(async_closure)
+    let result = await optional.optionally(async_provider)
     
     // Then
+    tracker.verify(called: true, message: "Async closure should be called when optional is nil")
     #expect(result == 2.71)
-    #expect(closure_called, "Async closure should be called when optional is nil")
   }
   
   @Test("optionally(async_closure:) returns nil when closure returns nil")
   func optionally_async_returns_nil_when_closure_returns_nil() async throws {
     // Given
     let optional: Double? = nil
-    var closure_called = false
+    var tracker = ClosureTracker()
     
-    func async_closure() async -> Double? {
-      closure_called = true
+    func async_provider() async -> Double? {
+      tracker.track()
       return nil
     }
     
     // When
-    let result = await optional.optionally(async_closure)
+    let result = await optional.optionally(async_provider)
     
     // Then
+    tracker.verify(called: true, message: "Async closure should be called when optional is nil")
     #expect(result == nil)
-    #expect(closure_called, "Async closure should be called when optional is nil")
   }
   
-  @Test("optionally(async_closure:) chains with otherwise for guaranteed values")
-  func optionally_async_chains_with_otherwise_for_guaranteed_values() async throws {
-    // Given
-    let optional: Double? = nil
-    let default_value = 3.14
-    var closure_called = false
-    
-    func async_closure() async -> Double? {
-      closure_called = true
-      return nil
-    }
-    
-    // When
-    let result = await optional.optionally(async_closure).otherwise(default_value)
-    
-    // Then
-    #expect(result == default_value)
-    #expect(closure_called, "Async closure should be called when optional is nil")
-  }
+  // MARK: - Actor Isolation Tests
   
-  // MARK: - Actor Otherwise Tests
-  /// This is a special case for validating cross thread boundary support.
-  /// It should generally be a given but is included for extra validation.
   @Test("optionally works with actor isolation")
   func optionally_works_with_actors() async throws {
     // Given
-    actor TestActor {
-      private var call_count = 0
-      
-      func compute_optional_value() -> String? {
-        call_count += 1
-        return "Actor Value"
-      }
-      
-      func get_call_count() -> Int {
-        return call_count
-      }
-    }
-    
     let actor = TestActor()
     
     // Test with non-nil optional
     let optional_with_value: String? = "Original Value"
     let result_with_value = await optional_with_value.optionally {
-      await actor.compute_optional_value()
+      await actor.compute_default_string()
     }
     
     // Test with nil optional
     let optional_nil: String? = nil
     let result_nil = await optional_nil.optionally {
-      await actor.compute_optional_value()
+      await actor.compute_default_string()
     }
     
     // Then
     #expect(result_with_value == "Original Value")
-    #expect(result_nil == "Actor Value")
+    #expect(result_nil == "DEFAULT")
     #expect(await actor.get_call_count() == 1, "Actor should be called only once (for nil case)")
   }
   
@@ -274,17 +225,17 @@ struct OptionalOptionallyTests {
     let first: String? = nil
     let second: String? = nil
     let default_value = "Default"
-    var closure_called = false
+    var tracker = ClosureTracker()
     
     // When
     let result = first.optionally(second).optionally {
-      closure_called = true
+      tracker.track()
       return "From Closure"
     }.otherwise(default_value)
     
     // Then
     #expect(result == "From Closure")
-    #expect(closure_called, "Closure should be called in the chain")
+    tracker.verify(called: true, message: "Closure should be called in the chain")
   }
   
   @Test("async and sync optionally can be chained with otherwise")
@@ -292,10 +243,10 @@ struct OptionalOptionallyTests {
     // Given
     let first: String? = nil
     let default_value = "Default"
-    var closure_called = false
+    var tracker = ClosureTracker()
     
     func async_compute() async -> String? {
-      closure_called = true
+      tracker.track()
       return "Async Value"
     }
     
@@ -303,7 +254,7 @@ struct OptionalOptionallyTests {
     let result = await first.optionally(async_compute).otherwise(default_value)
     
     // Then
+    tracker.verify(called: true, message: "Async closure should be called in the chain")
     #expect(result == "Async Value")
-    #expect(closure_called, "Async closure should be called in the chain")
   }
 }
