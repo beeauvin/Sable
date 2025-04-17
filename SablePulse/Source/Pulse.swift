@@ -69,20 +69,10 @@ public struct Pulse<Data: Pulsable>: Pulsable, Representable {
   }
   
   /// Private initializer used by the fluent builder pattern
-  private init(id: UUID, timestamp: Date, data: Data, meta: PulseMeta) {
+  internal init(id: UUID, timestamp: Date, data: Data, meta: PulseMeta) {
     self.id = id
     self.timestamp = timestamp
     self.data = data
     self.meta = meta
-  }
-  
-  /// Helper method for fluent builders to create new instances
-  internal static func Fluently(_ pulse: Pulse<Data>, meta: PulseMeta) -> Pulse<Data> {
-    return Pulse(
-      id: pulse.id,
-      timestamp: pulse.timestamp,
-      data: pulse.data,
-      meta: meta
-    )
   }
 }
