@@ -20,7 +20,7 @@ jobs:
     name: test with swift ${{ matrix.swift }} on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest] # ubuntu-latest
+        os: [macos-15, macos-14] # ubuntu-latest
         swift: ["6.1", "6.0"]
     runs-on: ${{ matrix.os }}
     steps:
