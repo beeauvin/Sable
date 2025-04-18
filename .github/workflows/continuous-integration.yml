@@ -28,7 +28,22 @@ jobs:
         with:
           swift-version: ${{ matrix.swift }}
       - uses: actions/checkout@v4
-      - name: build
-        run: swift build
       - name: test
-        run: swift test
+        run: swift test --parallel --enable-code-coverage
+
+  coverage:
+    runs-on: macos-latest
+    steps:
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - uses: actions/checkout@v4
+      - name: test
+        run: swift test --parallel --enable-code-coverage
+      - name: report
+        run: xcrun llvm-cov export -format=lcov .build/arm64-apple-macosx/debug/SablePackageTests.xctest/Contents/MacOS/SablePackageTests -instr-profile .build/arm64-apple-macosx/debug/codecov/default.profdata --ignore-filename-regex=".build" > coverage.lcov
+      - name: coverage
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.lcov
