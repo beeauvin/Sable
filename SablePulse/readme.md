@@ -1,15 +1,15 @@
 # 🖤 SablePulse
 
-🖤 SablePulse is a type-safe event messaging system enabling elegant, decoupled communication
-between components. As part of the Sable framework, it prioritizes beautiful API design with natural
-language interfaces while handling complex thread and memory safety internally.
+🖤 SablePulse provides type-safe message primitives for building event-based systems. As part of
+the Sable framework, it prioritizes beautiful API design with natural language interfaces while
+handling complex thread and memory safety internally.
 
 ## Overview
 
-SablePulse provides immutable, strongly-typed message containers called "pulses" for safe
-communication in concurrent environments. Built on Swift's actor model and structured concurrency,
-SablePulse ensures that message data remains consistent and thread-safe as it flows through your
-application.
+SablePulse offers immutable, strongly-typed message containers called "pulses" with rich metadata
+that can be used as the foundation for implementing messaging systems in your applications. These
+message primitives are designed to work with Swift's actor model and structured concurrency,
+ensuring that message data is properly formed and thread-safe.
 
 ```swift
 import SablePulse  // Use as a standalone module
@@ -17,8 +17,8 @@ import SablePulse  // Use as a standalone module
 
 ## Core Features
 
-- **Type-Safe Messaging**: Full generic type support without any type erasure
-- **Actor-Ready Concurrency**: Built specifically for Swift's actor system
+- **Type-Safe Messaging Primitives**: Full generic type support without any type erasure
+- **Actor-Ready Value Types**: Designed specifically for Swift's actor system
 - **Natural Language API**: Expressive, readable method names that form cohesive sentences
 - **Immutable Message Design**: All operations produce new message instances
 - **Comprehensive Metadata**: Rich operational context that travels with messages
@@ -30,7 +30,7 @@ import SablePulse  // Use as a standalone module
 
 ### Pulse
 
-The `Pulse` struct is the central unit of communication in SablePulse, encapsulating typed data
+The `Pulse` struct is the central message primitive in SablePulse, encapsulating typed data
 along with system metadata:
 
 ```swift
@@ -47,7 +47,7 @@ Each pulse contains:
 
 ### Pulsable
 
-The `Pulsable` protocol defines requirements for types that can be sent through the system:
+The `Pulsable` protocol defines requirements for types that can be used as pulse data:
 
 ```swift
 public protocol Pulsable: Sendable, Equatable, Copyable, Codable, Hashable {}
@@ -150,7 +150,7 @@ let response = Pulse(AuthCompleted(success: true))
 
 ## Thread Safety
 
-SablePulse is designed for heavy actor-based, multi-threaded environments:
+SablePulse is designed for use in actor-based, multi-threaded environments:
 
 - All pulses are immutable value types
 - All pulse data must conform to `Sendable`
@@ -162,11 +162,11 @@ synchronization concerns.
 
 ## Usage Patterns
 
-SablePulse provides the messaging primitives, but how you use them in your application is entirely
-up to you. Any data that conforms to `Pulsable` can be sent as a pulse, allowing for a wide range of
-use cases:
+SablePulse provides the message primitives, but how you integrate them into your application's
+messaging infrastructure is entirely up to you. Any data that conforms to `Pulsable` can be
+encapsulated in a pulse, allowing for a wide range of use cases:
 
-### Basic Messaging
+### Basic Message Creation
 
 ```swift
 // Define message types
@@ -233,13 +233,11 @@ let background_pulse = Pulse(LogMetrics(count: 42))
     .priority(.low)
     .tagged("metrics", "background")
 
-// Use pulse priority directly with Swift's task system.
-// Meta keeps the raw value for encoding and usage in larger systems.
-Task(priority: TaskPriority(rawValue: critical_pulse.meta.priority)) {
+// Use pulse priority directly with Swift's task system
+Task(priority: critical_pulse.priority) {
     // Handle critical pulse processing
 }
 
-// Use the priority convenience getter that converts back to TaskPriority: `.low` in this case.
 Task(priority: background_pulse.priority) {
     // Handle background pulse processing
 }
@@ -262,10 +260,12 @@ let new_pulse = Pulse(UserAction(type: .tap))
 
 ## Integration
 
-While SablePulse is designed to work with Sable, it is functionally stand alone:
+SablePulse provides the message primitives but doesn't implement the actual message transport or routing:
 
-- Use SablePulse independently for type-safe messaging in any Swift application
-- Adopt SablePulse as a first step toward implementing the full Sable framework
-- Extend existing Sable implementations with custom pulse types for your domain
-- Interface with Sable-powered components by consuming and producing standard pulse messages
-- Build extensions that work with Sable and Pulses.
+- Use SablePulse independently as a foundation for your own messaging infrastructure
+- Build your own message dispatcher, subscription system, or event bus on top of these primitives
+- Integrate with existing actor-based systems by using pulses as the message format
+- Extend with custom pulse types specific to your application domain
+
+While SablePulse is designed to work seamlessly with other Sable modules, it stands alone as a 
+library of message primitives that can be used in any Swift application.
