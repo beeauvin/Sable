@@ -31,4 +31,24 @@ jobs:
       - name: build
         run: swift build
       - name: test
-        run: swift test
+        run: swift test --parallel --enable-code-coverage
+      - name: coverage
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  coverage:
+    runs-on: macos-latest
+    steps:
+      - uses: swift-actions/setup-swift@v2.3.0
+        with:
+          swift-version: "6.1"
+      - uses: actions/checkout@v4
+      - name: build
+        run: swift build
+      - name: test
+        run: swift test --parallel --enable-code-coverage
+      - name: coverage
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
