@@ -19,6 +19,12 @@ let package = Package(
       dependencies: ["SablePulse"],
       path: "Sable"
     ),
+    .testTarget(
+      name: "SableTests",
+      dependencies: ["Sable"],
+      path: "Tests",
+      exclude: ["readme.md"]
+    ),
 
     // SableFoundation
     .target(name: "SableFoundation", path: "SableFoundation/Source"),
