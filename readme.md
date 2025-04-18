@@ -1,5 +1,7 @@
 # 🖤 Sable
 
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fbeeauvin%2FSable%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/beeauvin/Sable)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fbeeauvin%2FSable%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/beeauvin/Sable)
 [![Maintainability](https://qlty.sh/badges/746fd841-b456-4854-9560-4603ba3660fb/maintainability.svg)](https://qlty.sh/gh/beeauvin/projects/Sable)
 
 🖤 Sable is a Swift 6+ utility library that prioritizes beautiful API design
