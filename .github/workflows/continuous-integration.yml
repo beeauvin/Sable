@@ -28,14 +28,8 @@ jobs:
         with:
           swift-version: ${{ matrix.swift }}
       - uses: actions/checkout@v4
-      - name: build
-        run: swift build
       - name: test
         run: swift test --parallel --enable-code-coverage
-      - name: coverage
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
 
   coverage:
     runs-on: macos-latest
@@ -44,12 +38,12 @@ jobs:
         with:
           swift-version: "6.1"
       - uses: actions/checkout@v4
-      - name: build
-        run: swift build
       - name: test
         run: swift test --parallel --enable-code-coverage
+      - name: report
+        run: xcrun llvm-cov export -format="lcov" .build/debug/SablePackageTests.xctest/Contents/MacOS/SablePackageTests -instr-profile .build/debug/codecov/default.profdata > coverage.lcov
       - name: coverage
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./.build/arm64-apple-macosx/debug/codecov/Sable.json
+          files: ./coverage.lcov
