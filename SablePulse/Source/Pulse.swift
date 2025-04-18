@@ -36,7 +36,7 @@ import SableFoundation
 ///
 /// `Pulse` conforms to both `Pulsable` and `Representable`, ensuring it can safely
 /// traverse actor boundaries and providing identity information for logging and debugging.
-public struct Pulse<Data: Pulsable>: Pulsable, Representable {
+@frozen public struct Pulse<Data: Pulsable>: Pulsable, Representable {
   /// Unique identifier for tracking the pulse through the system
   public let id: UUID
   
