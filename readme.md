@@ -8,10 +8,9 @@ presenting simplicity externally. Its only requirements are Swift 6+ and
 Foundation, making it widely compatible across Swift environments.
 
 At its core, Sable is a comprehensive reactive systems and application
-framework. While the initial release focuses on foundational utilities and
-messaging components, the full vision includes sophisticated reactive
-programming patterns and architectural frameworks that are currently being
-refined for future releases.
+framework. The initial release focuses on foundational utilities and
+messaging components, with sophisticated reactive programming patterns
+and architectural frameworks being refined for future releases.
 
 ## Philosophy & Vision
 
@@ -99,11 +98,11 @@ architecture:
   submodules except SableFoundation.
 - [**SableFoundation**](./SableFoundation/readme.md): Core Swift extensions and
   utilities that enhance the standard library with natural language alternatives
+- [**SablePulse**](./SablePulse/readme.md): Type-safe message primitives for building 
+  event-based systems, providing immutable, strongly-typed message containers with rich metadata
 
 ### Future Modules
 
-- **SablePulse**: Type-safe event messaging system enabling elegant, decoupled
-  communication between components
 - **SableFlow**: Advanced reactive programming patterns for building responsive,
   resilient applications
 - **SableWeave**: Architectural framework built on SableFlow for creating

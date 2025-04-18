@@ -26,7 +26,7 @@ import SableFoundation
 ///
 /// `PulseMeta` conforms to `Pulsable` to ensure it can safely traverse actor
 /// boundaries while maintaining type safety.
-public struct PulseMeta: Pulsable {
+@frozen public struct PulseMeta: Pulsable {
   /// Indicates whether this pulse was created in debug mode.
   ///
   /// When true, the pulse may receive special handling:

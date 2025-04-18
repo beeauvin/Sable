@@ -3,6 +3,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// Re-export SablePulse
+@_exported import SablePulse
+
 /// 🖤 Sable is a Swift 6+ utility library that prioritizes beautiful API design
 /// with natural language interfaces, handling complexity internally while presenting
 /// simplicity externally.
@@ -27,10 +30,10 @@
 ///
 /// - **Sable**: Umbrella module providing unified import
 /// - **SableFoundation**: Core Swift extensions and utilities
+/// - **SablePulse**: Type-safe event messaging system
 ///
 /// ## Future Modules
 ///
-/// - **SablePulse**: Type-safe event messaging system
 /// - **SableFlow**: Advanced reactive programming patterns
 /// - **SableWeave**: Architectural framework for modular, testable applications
 ///

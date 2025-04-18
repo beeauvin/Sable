@@ -14,7 +14,7 @@ import SableFoundation
 /// This type is not meant to be created directly by end users, but rather is managed
 /// internally by the SablePulse system. The `Pulsable` and `Representable` conformances
 /// ensure it can safely traverse actor boundaries and provide consistent identity information.
-public struct PulseSource: Pulsable, Representable {
+@frozen public struct PulseSource: Pulsable, Representable {
   /// A unique identifier for the pulse source.
   public let id: UUID
   
