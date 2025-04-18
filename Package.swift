@@ -16,7 +16,7 @@ let package = Package(
   targets: [
     .target(
       name: "Sable",
-      dependencies: [],
+      dependencies: ["SablePulse"],
       path: "Sable"
     ),
 
