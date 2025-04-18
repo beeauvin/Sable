@@ -107,4 +107,32 @@ extension Pulse {
     
     return fluently(meta: meta.fluently(tags: updated_tags))
   }
+  
+  // To be added to SablePulse/Source/Extensions/Pulse/FluentBuilder.swift
+  // after the existing extension methods
+  
+  /// Adopts all metadata from another pulse
+  ///
+  /// This method copies the complete metadata from the provided pulse while
+  /// preserving the current pulse's identity and data. Use it when you want
+  /// to create a pulse with identical operational characteristics to another.
+  ///
+  /// ```swift
+  /// // Create a new pulse with the same metadata as an existing one
+  /// let template_pulse = retrieve_template_pulse()
+  /// let new_pulse = Pulse(event_data).like(template_pulse)
+  /// ```
+  ///
+  /// All metadata properties are copied, including:
+  /// - Debug status
+  /// - Trace ID
+  /// - Source information
+  /// - Echoed pulse references
+  /// - Priority level
+  /// - Tags
+  ///
+  /// The original pulse's identity (ID and timestamp) and data are preserved.
+  public func like<T: Pulsable>(_ pulse: Pulse<T>) -> Pulse<Data> {
+    return fluently(meta: pulse.meta)
+  }
 }

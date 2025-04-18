@@ -273,6 +273,69 @@ struct PulseFluentTests {
     #expect(result.meta.tags.isEmpty)
   }
   
+  // MARK: - Like Tests
+  
+  @Test("like copies all metadata from source pulse")
+  func like_copies_all_metadata_from_source_pulse() throws {
+    // Given
+    struct OtherPulseData: Pulsable {
+      let id: Int
+    }
+    
+    let source_meta = PulseMeta(
+      debug: true,
+      trace: UUID(),
+      priority: .high,
+      tags: ["template", "reference"]
+    )
+    let source = Pulse(id: UUID(), timestamp: Date(), data: OtherPulseData(id: 42), meta: source_meta)
+    let target = create_test_pulse()
+    
+    // When
+    let result = target.like(source)
+    
+    // Then
+    #expect(result.meta.debug == source.meta.debug)
+    #expect(result.meta.trace == source.meta.trace)
+    #expect(result.meta.priority == source.meta.priority)
+    #expect(result.meta.tags == source.meta.tags)
+  }
+  
+  @Test("like preserves original pulse data")
+  func like_preserves_original_pulse_data() throws {
+    // Given
+    struct OtherPulseData: Pulsable {
+      let id: Int
+    }
+    
+    let source = Pulse(OtherPulseData(id: 42))
+    let target = Pulse(create_test_data(value: "Original Data"))
+    
+    // When
+    let result = target.like(source)
+    
+    // Then
+    #expect(result.data.value == "Original Data")
+  }
+  
+  @Test("like preserves original pulse identity")
+  func like_preserves_original_pulse_identity() throws {
+    // Given
+    struct OtherPulseData: Pulsable {
+      let id: Int
+    }
+    
+    let source = Pulse(OtherPulseData(id: 42))
+    let target = create_test_pulse()
+    
+    // When
+    let result = target.like(source)
+    
+    // Then
+    #expect(result.id == target.id)
+    #expect(result.timestamp == target.timestamp)
+  }
+  
   // MARK: - Chaining Tests
   
   @Test("chaining multiple methods works correctly")
