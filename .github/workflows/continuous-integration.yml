@@ -52,4 +52,4 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./.build/arm64-apple-macos/debug/codecov/Sable.json
+          files: ./.build/arm64-apple-macosx/debug/codecov/Sable.json
