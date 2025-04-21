@@ -9,10 +9,11 @@ let package = Package(
   ],
   products: [
     .library(name: "Sable", targets: ["Sable"]),
-    .library(name: "SableFoundation", targets: ["SableFoundation"]),
     .library(name: "SablePulse", targets: ["SablePulse"]),
   ],
-  dependencies: [],
+  dependencies: [
+    .package(url: "https://github.com/beeauvin/Obsidian.git", exact: "0.1.0")
+  ],
   targets: [
     .target(
       name: "Sable",
@@ -25,19 +26,13 @@ let package = Package(
       path: "Tests",
       exclude: ["readme.md"]
     ),
-
-    // SableFoundation
-    .target(name: "SableFoundation", path: "SableFoundation/Source"),
-    .testTarget(
-      name: "SableFoundationTests", dependencies: ["SableFoundation"], path: "SableFoundation/Tests"
-    ),
     
     // SablePulse
     .target(
       name: "SablePulse",
-      dependencies: ["SableFoundation"],
+      dependencies: ["Obsidian"],
       path: "SablePulse/Source"
     ),
-    .testTarget(name: "SablePulseTests", dependencies: ["SablePulse"], path: "SablePulse/Tests"),
+    .testTarget(name: "SablePulseTests", dependencies: ["SablePulse", "Obsidian"], path: "SablePulse/Tests"),
   ]
 )
