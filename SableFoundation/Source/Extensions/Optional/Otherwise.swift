@@ -3,6 +3,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+@available(*, deprecated, message: "Use Obsidian (https://github.com/beeauvin/Obsidian) instead.")
 extension Optional {
 
   // MARK: - Otherwise Value

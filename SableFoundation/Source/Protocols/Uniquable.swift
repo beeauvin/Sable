@@ -24,6 +24,7 @@ import Foundation
 /// - Note: Types conforming to `Uniquable` automatically conform to `Identifiable`,
 ///   making them compatible with SwiftUI and other frameworks that leverage the
 ///   `Identifiable` protocol.
+@available(*, deprecated, message: "Use Obsidian (https://github.com/beeauvin/Obsidian) instead.")
 public protocol Uniquable: Identifiable {
   /// A unique identifier for the instance.
   ///

@@ -1,5 +1,7 @@
 # 🖤 SableFoundation
 
+**DEPRECATED - USE [Obsidian](https://github.com/beeauvin/Obsidian) INSTEAD**
+
 🖤 SableFoundation is a drop-in replacement for Swift's Foundation library,
 providing elegant natural language extensions and utilities that enhance the
 standard Swift types.

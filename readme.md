@@ -100,7 +100,8 @@ architecture:
 
 - **Sable**: Umbrella module providing a unified import that re-exports all
   submodules except SableFoundation.
-- [**SableFoundation**](./SableFoundation/readme.md): Core Swift extensions and
+- [**SableFoundation**](./SableFoundation/readme.md): **DEPRECATED - USE
+  [Obsidian](https://github.com/beeauvin/Obsidian) INSTEAD**! Core Swift extensions and
   utilities that enhance the standard library with natural language alternatives
 - [**SablePulse**](./SablePulse/readme.md): Type-safe message primitives for building 
   event-based systems, providing immutable, strongly-typed message containers with rich metadata
