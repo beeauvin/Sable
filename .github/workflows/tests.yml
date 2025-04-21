@@ -3,7 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-name: ci
+name: tests
 
 on:
   push:
@@ -41,7 +41,7 @@ jobs:
       - name: test
         run: swift test --parallel --enable-code-coverage
       - name: report
-        run: xcrun llvm-cov export -format=lcov .build/arm64-apple-macosx/debug/SablePackageTests.xctest/Contents/MacOS/SablePackageTests -instr-profile .build/arm64-apple-macosx/debug/codecov/default.profdata --ignore-filename-regex=".build" > coverage.lcov
+        run: xcrun llvm-cov export -format=lcov .build/arm64-apple-macosx/debug/SablePackageTests.xctest/Contents/MacOS/SablePackageTests -instr-profile .build/arm64-apple-macosx/debug/codecov/default.profdata --ignore-filename-regex=".build|Tests" > coverage.lcov
       - name: coverage
         uses: codecov/codecov-action@v5
         with:
