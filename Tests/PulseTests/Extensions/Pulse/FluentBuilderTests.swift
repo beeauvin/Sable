@@ -8,8 +8,8 @@ import Obsidian
 
 @testable import Sable
 
-@Suite("Sable/Pulse/Extensions: Fluent")
-struct PulseFluentTests {
+@Suite("Sable/Pulse/Extensions: Pulse/FluentBuilder")
+struct PulseFluentBuilderTests {
   
   // MARK: - Test Data
   
