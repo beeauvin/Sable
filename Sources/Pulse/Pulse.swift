@@ -7,7 +7,7 @@ import Obsidian
 
 /// A lightweight, type-safe message container for async communication.
 ///
-/// `Pulse` is the core message unit in the SablePulse system, encapsulating
+/// `Pulse` is the core message unit in the Sable system, encapsulating
 /// typed data along with metadata that provides operational context. Pulses
 /// can form causal chains to track related messages and maintain tracing
 /// information across the system.
