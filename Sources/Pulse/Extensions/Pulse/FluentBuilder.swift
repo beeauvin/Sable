@@ -108,9 +108,6 @@ extension Pulse {
     return fluently(meta: meta.fluently(tags: updated_tags))
   }
   
-  // To be added to SablePulse/Source/Extensions/Pulse/FluentBuilder.swift
-  // after the existing extension methods
-  
   /// Adopts all metadata from another pulse
   ///
   /// This method copies the complete metadata from the provided pulse while

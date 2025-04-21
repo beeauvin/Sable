@@ -7,12 +7,12 @@ import Obsidian
 
 /// An internal structure that represents the origin of a pulse message.
 ///
-/// `PulseSource` is used within the SablePulse system to track message provenance
+/// `PulseSource` is used within the Sable system to track message provenance
 /// and causation chains. It appears in `PulseMeta` through the `source` and `echoes`
 /// properties, providing information about where pulses originated and what preceded them.
 ///
 /// This type is not meant to be created directly by end users, but rather is managed
-/// internally by the SablePulse system. The `Pulsable` and `Representable` conformances
+/// internally by the Sable system. The `Pulsable` and `Representable` conformances
 /// ensure it can safely traverse actor boundaries and provide consistent identity information.
 @frozen public struct PulseSource: Pulsable, Representable {
   /// A unique identifier for the pulse source.
@@ -23,7 +23,7 @@ import Obsidian
   
   /// Creates a `PulseSource` from any type that conforms to `Representable`.
   ///
-  /// Used internally by the SablePulse system to track the origins of pulse messages.
+  /// Used internally by the Sable system to track the origins of pulse messages.
   ///
   /// - Parameter source: A `Representable` object to create a source from
   /// - Returns: A new `PulseSource` with the same identity and name as the source
@@ -33,7 +33,7 @@ import Obsidian
   
   /// Creates a `PulseSource` from a pulse message.
   ///
-  /// Used internally by the SablePulse system to track causation chains,
+  /// Used internally by the Sable system to track causation chains,
   /// where one pulse causes another to be emitted.
   ///
   /// - Parameter pulse: A `Pulse` message to create a source from

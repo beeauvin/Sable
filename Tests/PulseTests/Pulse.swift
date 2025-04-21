@@ -6,9 +6,9 @@
 import Testing
 import Obsidian
 
-@testable import SablePulse
+@testable import Sable
 
-@Suite("SablePulse/Core: Pulse")
+@Suite("Sable/Pulse/Core: Pulse")
 struct PulseTests {
   
   // MARK: - Test Data
