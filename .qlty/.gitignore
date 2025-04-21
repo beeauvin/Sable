@@ -1,7 +1,0 @@
-*
-!configs
-!configs/**
-!hooks
-!hooks/**
-!.gitignore
-!qlty.toml
