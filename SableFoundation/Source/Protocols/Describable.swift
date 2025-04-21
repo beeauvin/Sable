@@ -26,6 +26,7 @@
 /// - Note: Unlike Swift's `CustomStringConvertible` protocol, `Describable` is designed
 ///   to be used explicitly when a description is needed, rather than implicitly through
 ///   string interpolation or printing.
+@available(*, deprecated, message: "Use Obsidian (https://github.com/beeauvin/Obsidian) instead.")
 public protocol Describable {
   /// A textual description of the instance.
   ///

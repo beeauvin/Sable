@@ -32,6 +32,7 @@
 ///
 /// - Note: Types conforming to `Representable` automatically conform to
 ///   `Uniquable`, `Namable`, and `Describable`, gaining all their functionality.
+@available(*, deprecated, message: "Use Obsidian (https://github.com/beeauvin/Obsidian) instead.")
 public protocol Representable: Uniquable, Namable, Describable {}
 
 extension Representable {

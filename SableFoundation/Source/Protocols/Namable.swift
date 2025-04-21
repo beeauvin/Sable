@@ -32,6 +32,7 @@
 /// - Note: The default implementation returns the type name without parentheses,
 ///   using `String(describing: type(of: self))` rather than `String(describing: self)`.
 ///   This provides a cleaner representation for logging and debugging.
+@available(*, deprecated, message: "Use Obsidian (https://github.com/beeauvin/Obsidian) instead.")
 public protocol Namable {
   /// A human-readable name for the instance.
   ///

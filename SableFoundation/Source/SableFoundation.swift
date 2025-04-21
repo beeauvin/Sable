@@ -11,4 +11,5 @@
 ///
 /// This module serves as a core component of the Sable framework, offering expressive
 /// extensions to built-in Swift types that prioritize readability and developer experience.
+@available(*, deprecated, message: "Use Obsidian (https://github.com/beeauvin/Obsidian) instead.")
 public enum SableFoundation {}
