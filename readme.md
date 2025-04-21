@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fbeeauvin%2FSable%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/beeauvin/Sable)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fbeeauvin%2FSable%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/beeauvin/Sable)
-[![tests](https://github.com/beeauvin/Sable/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/beeauvin/Sable/actions/workflows/continuous-integration.yml)
+[![tests](https://github.com/beeauvin/Sable/actions/workflows/tests.yml/badge.svg)](https://github.com/beeauvin/Sable/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/beeauvin/Sable/graph/badge.svg?token=tHGLyrd7rG)](https://codecov.io/gh/beeauvin/Sable)
 
 🖤 Sable is a Swift 6+ framework that provides a comprehensive foundation for building reactive,
@@ -174,15 +174,18 @@ Sable is evolving to provide a cohesive, unified framework for reactive, event-d
 
 ### Current Status
 
-- **Core Messaging Primitives**: The Pulse system (formerly SablePulse) is now fully integrated into the core Sable framework, providing the fundamental message types and metadata handling.
+- **Core Messaging Primitives**: The Pulse system (formerly SablePulse) is now fully integrated into
+  the core Sable framework, providing the fundamental message types and metadata handling.
 
 ### Coming Soon
 
-- **Transmission Primitives**: Building on the Pulse foundation, these components will enable sophisticated message routing, filtering, and processing across actor boundaries.
+- **Transmission Primitives**: Building on the Pulse foundation, these components will enable
+  sophisticated message routing, filtering, and processing across actor boundaries.
 
 ### Related Projects
 
-- [**Obsidian**](https://github.com/beeauvin/Obsidian): Swift extensions and utilities that enhance the standard library with natural language alternatives (formerly SableFoundation)
+- [**Obsidian**](https://github.com/beeauvin/Obsidian): Swift extensions and utilities that enhance
+  the standard library with natural language alternatives (formerly SableFoundation)
 
 ## Getting Started
 
@@ -192,7 +195,7 @@ Add Sable to your Swift package dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/beeauvin/Sable.git", from: "0.1.0")
+    .package(url: "https://github.com/beeauvin/Sable.git", from: "0.2.0")
 ]
 ```
 
