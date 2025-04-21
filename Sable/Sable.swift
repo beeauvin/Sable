@@ -29,7 +29,6 @@
 /// ## Available Modules
 ///
 /// - **Sable**: Umbrella module providing unified import
-/// - **SableFoundation**: Core Swift extensions and utilities
 /// - **SablePulse**: Type-safe event messaging system
 ///
 /// ## Future Modules
