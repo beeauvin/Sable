@@ -91,6 +91,10 @@ architecture toward precise, purposeful connections rather than generic, catch-a
 - **Tracing & Causality**: Built-in support for tracing message flows and causality chains
 - **Memory Safety**: Designed with proper resource lifecycle management
 - **Debugging Support**: Debug-specific features to enhance visibility during development
+- **Typed Message Handling**: Strongly-typed channels for processing pulses with guaranteed delivery
+- **Actor-Isolated Channels**: Ownership model ensuring proper resource lifecycle management
+- **Priority-Based Processing**: Task priority inheritance for appropriate message handling
+- **Safe Error Handling**: Result-based error handling without throwing functions
 
 ### Type-Safe Messaging
 
@@ -160,6 +164,48 @@ let third = Pulse.Respond(
 // second.meta.echoes?.id == original.id
 ```
 
+### Typed Channel System
+
+Sable's Channel system provides a safe, actor-isolated mechanism for delivering strongly-typed
+pulse messages to registered handlers:
+
+```swift
+// Create a channel with a generated key
+let (auth_channel, auth_key) = Channel.Create { pulse in
+    await process_auth_event(pulse.data)
+}
+
+// Create a channel owned by a specific component
+let profile_channel = Channel(owner: profile_service) { pulse in
+    await update_user_profile(pulse.data)
+}
+
+// Send a pulse to a channel
+let result = await profile_channel.send(profile_update_pulse)
+
+// Release a channel when no longer needed
+await auth_channel.release(key: auth_key)
+```
+
+Channels implement an ownership model where only the component that created the channel can release it:
+
+```swift
+// Attempt to release with the wrong key
+switch await channel.release(key: wrong_key) {
+case .success:
+    // Will never reach here with wrong key
+    break
+    
+case .failure(.invalid(let key)):
+    // Handle invalid key error
+    log_security_event("Invalid key used: \(key)")
+    
+case .failure(.released):
+    // Handle already released error
+    log_warning("Channel was already released")
+}
+```
+
 ### Metadata & Context
 
 Rich operational context that travels with messages, enabling:
@@ -170,17 +216,16 @@ Rich operational context that travels with messages, enabling:
 
 ## Framework Structure
 
-Sable is evolving to provide a cohesive, unified framework for reactive, event-driven systems:
+Sable provides a cohesive, unified framework for reactive, event-driven systems:
 
-### Current Status
+### Current Components
 
-- **Core Messaging Primitives**: The Pulse system (formerly SablePulse) is now fully integrated into
-  the core Sable framework, providing the fundamental message types and metadata handling.
+- **Core Messaging Primitives**: The Pulse system provides the fundamental message types and metadata handling.
+- **Channel System**: Strongly-typed message handlers with guaranteed delivery and ownership management.
 
 ### Coming Soon
 
-- **Transmission Primitives**: Building on the Pulse foundation, these components will enable
-  sophisticated message routing, filtering, and processing across actor boundaries.
+- **Transmission Primitives**: Advanced message routing, filtering, and processing across actor boundaries.
 
 ### Related Projects
 
@@ -195,7 +240,7 @@ Add Sable to your Swift package dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/beeauvin/Sable.git", from: "0.2.0")
+    .package(url: "https://github.com/beeauvin/Sable.git", from: "0.3.0")
 ]
 ```
 
@@ -270,6 +315,62 @@ actor AuthenticationService {
             .tagged("auth", "security")
             
         return result
+    }
+}
+```
+
+### Channel-Based Message Handling
+
+Implement dedicated message handlers using the Channel system:
+
+```swift
+// Define a service that processes specific message types
+actor NotificationService {
+    // Store channels as properties
+    private let event_channel: Channel<SystemEvent>
+    private let release_key: UUID
+    
+    init() {
+        // Create a channel with a generated key
+        let (channel, key) = Channel.Create { pulse in
+            await self.process_event(pulse.data)
+        }
+        
+        self.event_channel = channel
+        self.release_key = key
+    }
+    
+    // Method to process events internally
+    private func process_event(_ event: SystemEvent) async {
+        // Process the event...
+    }
+    
+    // Provide the channel to other components
+    func provide_channel() -> Channel<SystemEvent> {
+        return event_channel
+    }
+    
+    // Clean up resources when shutting down
+    func shutdown() async {
+        await event_channel.release(key: release_key)
+    }
+}
+
+// In another component, use the service's channel
+actor EventCoordinator {
+    let notification_channel: Channel<SystemEvent>
+    
+    init(notification_service: NotificationService) {
+        self.notification_channel = notification_service.provide_channel()
+    }
+    
+    func handle_system_event(_ event: SystemEvent) async {
+        // Create and send a pulse through the channel
+        let pulse = Pulse(event)
+            .priority(.high)
+            .tagged("system", "notification")
+        
+        await notification_channel.send(pulse)
     }
 }
 ```
