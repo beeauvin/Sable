@@ -5,11 +5,11 @@ import PackageDescription
 let package = Package(
   name: "Sable",
   platforms: [
-    .macOS(.v14),
-    .iOS(.v18),
-    .tvOS(.v18),
-    .visionOS(.v2),
-    .watchOS(.v11),
+    .macOS(.v10_15),
+    .iOS(.v13),
+    .tvOS(.v13),
+    .visionOS(.v1),
+    .watchOS(.v6),
   ],
   products: [
     .library(name: "Sable", targets: ["Sable"])
