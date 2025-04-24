@@ -15,7 +15,7 @@ let package = Package(
     .library(name: "Sable", targets: ["Sable"])
   ],
   dependencies: [
-    .package(url: "https://github.com/beeauvin/Obsidian.git", exact: "0.1.0")
+    .package(url: "https://github.com/beeauvin/Obsidian.git", exact: "0.2.0")
   ],
   targets: [
     .target(name: "Sable", dependencies: ["Obsidian"], path: "Sources"),
