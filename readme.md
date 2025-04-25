@@ -170,35 +170,26 @@ Sable's Channel system provides a safe, actor-isolated mechanism for delivering 
 pulse messages to registered handlers:
 
 ```swift
-// Create a channel with a generated key
-let (auth_channel, auth_key) = Channel.Create { pulse in
+// Create a channel with a handler function
+let auth_channel = Channel { pulse in
     await process_auth_event(pulse.data)
 }
 
-// Create a channel owned by a specific component
-let profile_channel = Channel(owner: profile_service) { pulse in
-    await update_user_profile(pulse.data)
-}
-
 // Send a pulse to a channel
-let result = await profile_channel.send(profile_update_pulse)
+let result = await auth_channel.send(login_pulse)
 
 // Release a channel when no longer needed
-await auth_channel.release(key: auth_key)
+await auth_channel.release()
 ```
 
-Channels implement an ownership model where only the component that created the channel can release it:
+Channels follow Swift's ownership model, where any code with a reference can release it:
 
 ```swift
-// Attempt to release with the wrong key
-switch await channel.release(key: wrong_key) {
+// Attempt to release a channel
+switch await channel.release() {
 case .success:
-    // Will never reach here with wrong key
-    break
-    
-case .failure(.invalid(let key)):
-    // Handle invalid key error
-    log_security_event("Invalid key used: \(key)")
+    // Channel was successfully released
+    log_event("Channel successfully released")
     
 case .failure(.released):
     // Handle already released error
