@@ -17,55 +17,23 @@ struct ChannelTests {
     let message: String
   }
   
-  struct TestOwner: Uniquable {
-    let id = UUID()
-    let name = "Test Owner"
-  }
-  
   func create_test_pulse() -> Pulse<TestPulseData> {
     return Pulse(TestPulseData(message: "Test Message"))
   }
   
   // MARK: - Initialization Tests
   
-  @Test("initializes with provided key")
-  func initializes_with_provided_key() throws {
+  @Test("initializes with handler")
+  func initializes_with_handler() throws {
     // Given
-    let key = UUID()
     let handler: ChannelHandler<TestPulseData> = { _ in }
     
     // When
-    let _ = Channel(key: key, handler: handler)
+    let _ = Channel(handler: handler)
     
     // Then
     // If initialization failed, this would have thrown an error
     // No assertion needed - the test passes if no error is thrown
-  }
-  
-  @Test("initializes with owner")
-  func initializes_with_owner() throws {
-    // Given
-    let owner = TestOwner()
-    let handler: ChannelHandler<TestPulseData> = { _ in }
-    
-    // When
-    let _ = Channel(owner: owner, handler: handler)
-    
-    // Then
-    // If initialization failed, this would have thrown an error
-    // No assertion needed - the test passes if no error is thrown
-  }
-  
-  @Test("Create returns channel and key")
-  func create_returns_channel_and_key() throws {
-    // Given
-    let handler: ChannelHandler<TestPulseData> = { _ in }
-    
-    // When
-    let (_, key) = Channel.Create(handler: handler)
-    
-    // Then
-    #expect(!key.uuidString.isEmpty)
   }
   
   // MARK: - Send Tests
@@ -83,7 +51,7 @@ struct ChannelTests {
         confirm()
       }
       
-      let channel = Channel(key: UUID(), handler: handler)
+      let channel = Channel(handler: handler)
       let result = await channel.send(pulse)
       try await Task.sleep(for: .milliseconds(100))
       
@@ -99,13 +67,12 @@ struct ChannelTests {
   func send_returns_error_when_channel_released() async throws {
     // Given
     let pulse = create_test_pulse()
-    let key = UUID()
     let handler: ChannelHandler<TestPulseData> = { _ in }
     
-    let channel = Channel(key: key, handler: handler)
+    let channel = Channel(handler: handler)
     
     // When
-    let release_result = await channel.release(key: key)
+    let release_result = await channel.release()
     if case .failure = release_result {
       #expect(Bool(false), "Channel release should have succeeded")
     }
@@ -126,16 +93,15 @@ struct ChannelTests {
   
   // MARK: - Release Tests
   
-  @Test("release succeeds with correct key")
-  func release_succeeds_with_correct_key() async throws {
+  @Test("release succeeds")
+  func release_succeeds() async throws {
     // Given
-    let key = UUID()
     let handler: ChannelHandler<TestPulseData> = { _ in }
     
-    let channel = Channel(key: key, handler: handler)
+    let channel = Channel(handler: handler)
     
     // When
-    let result = await channel.release(key: key)
+    let result = await channel.release()
     
     // Then
     if case .success = result {
@@ -145,46 +111,21 @@ struct ChannelTests {
     }
   }
   
-  @Test("release fails with incorrect key")
-  func release_fails_with_incorrect_key() async throws {
-    // Given
-    let correct_key = UUID()
-    let incorrect_key = UUID()
-    let handler: ChannelHandler<TestPulseData> = { _ in }
-    
-    let channel = Channel(key: correct_key, handler: handler)
-    
-    // When
-    let result = await channel.release(key: incorrect_key)
-    
-    // Then
-    if case .failure(let error) = result {
-      if case .invalid(let key) = error {
-        #expect(key == incorrect_key)
-      } else {
-        #expect(Bool(false), "Expected invalid key error but got different error")
-      }
-    } else {
-      #expect(Bool(false), "Expected failure result from release")
-    }
-  }
-  
   @Test("release fails when already released")
   func release_fails_when_already_released() async throws {
     // Given
-    let key = UUID()
     let handler: ChannelHandler<TestPulseData> = { _ in }
     
-    let channel = Channel(key: key, handler: handler)
+    let channel = Channel(handler: handler)
     
     // When
-    let first_result = await channel.release(key: key)
+    let first_result = await channel.release()
     if case .failure = first_result {
       #expect(Bool(false), "First channel release should have succeeded")
     }
     
     // Then
-    let second_result = await channel.release(key: key)
+    let second_result = await channel.release()
     
     if case .failure(let error) = second_result {
       if case .released = error {
@@ -212,7 +153,7 @@ struct ChannelTests {
         confirm()
       }
       
-      let channel = Channel(key: UUID(), handler: handler)
+      let channel = Channel(handler: handler)
       let _ = await channel.send(pulse)
       try await Task.sleep(for: .milliseconds(100))
     }

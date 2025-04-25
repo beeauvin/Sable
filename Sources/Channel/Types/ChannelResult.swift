@@ -25,10 +25,6 @@
 /// case .failure(.released):
 ///   // Channel was already released
 ///   handle_released_channel()
-///
-/// case .failure(.invalid(let key)):
-///   // Invalid key was provided
-///   log_invalid_key_error(key)
 /// }
 /// ```
 ///
