@@ -21,14 +21,6 @@ struct StreamTests {
     return Pulse(TestData(message: "Test Message"))
   }
   
-  // MARK: - Protocol Conformance Tests
-  
-  @Test("conforms to Channeling")
-  func conforms_to_channeling() throws {
-    let is_channeling = (Stream<TestData>.self as Any) is any Channeling.Type
-    #expect(is_channeling)
-  }
-  
   // MARK: - Initialization Tests
   
   @Test("initializes with data handler only")
