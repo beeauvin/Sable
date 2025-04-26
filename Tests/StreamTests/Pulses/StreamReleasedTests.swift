@@ -21,22 +21,16 @@ struct StreamReleasedTests {
   
   // MARK: - Factory Method Tests
   
-  @Test("pulse() creates a Pulse containing StreamReleased")
+  @Test("Pulse creates a Pulse containing StreamReleased")
   func pulse_creates_pulse_containing_stream_released() throws {
+    // Given
+    let id: UUID = UUID()
+
     // When
-    let pulse = StreamReleased.pulse()
+    let pulse = Pulse(StreamReleased(stream_id: id))
     
     // Then
     #expect(type(of: pulse.data) == StreamReleased.self)
-  }
-  
-  @Test("pulse() creates a unique pulse each time")
-  func pulse_creates_unique_pulse_each_time() throws {
-    // When
-    let pulse1 = StreamReleased.pulse()
-    let pulse2 = StreamReleased.pulse()
-    
-    // Then
-    #expect(pulse1.id != pulse2.id)
+    #expect(pulse.data.stream_id == id)
   }
 }

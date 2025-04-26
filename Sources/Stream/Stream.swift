@@ -19,6 +19,7 @@ import Obsidian
 /// existing channel-based architectures.
 ///
 /// Key features:
+/// - Unique identification through UUID for stream tracking in complex systems
 /// - Bidirectional lifecycle awareness through notification channels
 /// - Type-safe data passing with Pulse encapsulation
 /// - Actor isolation for thread safety
@@ -41,11 +42,13 @@ import Obsidian
 ///     // Process data flowing through the stream
 ///     await resource_service.process(pulse.data)
 ///   },
-///   source_released_handler: { _ in
+///   source_released_handler: { released_pulse in
 ///     // Handle source closing the stream
+///     // Can access released_pulse.stream_id directly or
+///     // released_pulse.meta.source.id for the same information
 ///     await resource_service.disconnect_source()
 ///   },
-///   sink_released_handler: { _ in
+///   sink_released_handler: { released_pulse in
 ///     // Handle sink closing the stream
 ///     await resource_service.release_resources()
 ///   }
@@ -57,7 +60,12 @@ import Obsidian
 /// // Release the stream when no longer needed
 /// await resource_stream.release()
 /// ```
-final public actor Stream<Data: Pulsable>: Channeling {
+final public actor Stream<Data: Pulsable>: Channeling, Representable {
+  /// Unique identifier for this stream
+  ///
+  /// This ID allows for proper identification of the stream in release notifications
+  /// and enables tracking in systems that manage multiple streams, such as Deltas.
+  public let id: UUID = UUID()
   
   // Primary data channel from source to sink
   private var data_channel: Optional<Channel<Data>>
@@ -84,14 +92,21 @@ final public actor Stream<Data: Pulsable>: Channeling {
   /// // Create a stream with both lifecycle handlers
   /// let full_stream = Stream(
   ///   data_handler: message_processor.handle,
-  ///   source_released_handler: { _ in handle_source_disconnect() },
-  ///   sink_released_handler: { _ in handle_sink_disconnect() }
+  ///   source_released_handler: { released_pulse in
+  ///     // Can access the stream ID through both:
+  ///     // released_pulse.stream_id (direct)
+  ///     // released_pulse.meta.source.id (metadata)
+  ///     handle_source_disconnect()
+  ///   },
+  ///   sink_released_handler: { released_pulse in
+  ///     handle_sink_disconnect()
+  ///   }
   /// )
   ///
   /// // Create a stream with only source release notification
   /// let source_aware_stream = Stream(
   ///   data_handler: message_processor.handle,
-  ///   source_released_handler: { _ in handle_source_disconnect() }
+  ///   source_released_handler: { released_pulse in handle_source_disconnect() }
   /// )
   ///
   /// // Create a simple stream with no lifecycle awareness
@@ -159,6 +174,7 @@ final public actor Stream<Data: Pulsable>: Channeling {
   /// This method performs a complete shutdown of the stream by:
   /// 1. Checking if the stream is already released (data_channel is nil)
   /// 2. Sending release notifications through both notification channels (if they exist)
+  ///    including the stream's unique ID both directly and via metadata
   /// 3. Releasing all three internal channels
   /// 4. Clearing the channel references to allow proper resource cleanup
   ///
@@ -183,15 +199,16 @@ final public actor Stream<Data: Pulsable>: Channeling {
   @discardableResult
   public func release() async -> ChannelResult {
     guard let _ = data_channel else { return .failure(.released) }
+    let release_pulse = Pulse(StreamReleased(stream_id: id)).from(self)
     
     source_released_channel = await source_released_channel.transform { channel in
-      await channel.send(StreamReleased.pulse())
+      await channel.send(release_pulse)
       await channel.release()
       return .none
     }
     
     sink_released_channel = await sink_released_channel.transform { channel in
-      await channel.send(StreamReleased.pulse())
+      await channel.send(release_pulse)
       await channel.release()
       return .none
     }
