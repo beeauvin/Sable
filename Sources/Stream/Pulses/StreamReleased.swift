@@ -19,7 +19,7 @@
 /// // Send a stream released notification
 /// await notification_channel.send(StreamReleased.pulse())
 /// ```
-public struct StreamReleased: Pulsable {
+@frozen public struct StreamReleased: Pulsable {
   /// Creates a new pulse containing a StreamReleased event.
   ///
   /// This factory method creates a fully-configured pulse containing a
