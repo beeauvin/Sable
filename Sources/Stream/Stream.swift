@@ -38,19 +38,19 @@ import Obsidian
 /// ```swift
 /// // Create a stream with data and lifecycle handlers
 /// let resource_stream = Stream(
-///   data_handler: { pulse in
-///     // Process data flowing through the stream
-///     await resource_service.process(pulse.data)
-///   },
-///   source_released_handler: { released_pulse in
+///   source_released: { released_pulse in
 ///     // Handle source closing the stream
 ///     // Can access released_pulse.stream_id directly or
 ///     // released_pulse.meta.source.id for the same information
 ///     await resource_service.disconnect_source()
 ///   },
-///   sink_released_handler: { released_pulse in
+///   sink_released: { released_pulse in
 ///     // Handle sink closing the stream
 ///     await resource_service.release_resources()
+///   },
+///   handler: { pulse in
+///     // Process data flowing through the stream
+///     await resource_service.process(pulse.data)
 ///   }
 /// )
 ///
@@ -91,49 +91,49 @@ final public actor Stream<Data: Pulsable>: Channeling, Representable {
   /// ```swift
   /// // Create a stream with both lifecycle handlers
   /// let full_stream = Stream(
-  ///   data_handler: message_processor.handle,
-  ///   source_released_handler: { released_pulse in
+  ///   source_released: { released_pulse in
   ///     // Can access the stream ID through both:
   ///     // released_pulse.stream_id (direct)
   ///     // released_pulse.meta.source.id (metadata)
   ///     handle_source_disconnect()
   ///   },
-  ///   sink_released_handler: { released_pulse in
+  ///   sink_released: { released_pulse in
   ///     handle_sink_disconnect()
-  ///   }
+  ///   },
+  ///   handler: message_processor.handle
   /// )
   ///
   /// // Create a stream with only source release notification
   /// let source_aware_stream = Stream(
-  ///   data_handler: message_processor.handle,
-  ///   source_released_handler: { released_pulse in handle_source_disconnect() }
+  ///   source_released: { released_pulse in handle_source_disconnect() },
+  ///   handler: message_processor.handle
   /// )
   ///
   /// // Create a simple stream with no lifecycle awareness
   /// let simple_stream = Stream(
-  ///   data_handler: message_processor.handle
+  ///   handler: message_processor.handle
   /// )
   /// ```
   ///
   /// - Parameters:
-  ///   - data_handler: Handler that processes data flowing from source to sink
-  ///   - source_released_handler: Optional handler notified when source closes the stream
-  ///   - sink_released_handler: Optional handler notified when sink closes the stream
+  ///   - source_released: Optional handler notified when source closes the stream
+  ///   - sink_released: Optional handler notified when sink closes the stream
+  ///   - handler: Handler that processes data flowing from source to sink
   public init(
-    data_handler: @escaping ChannelHandler<Data>,
-    source_released_handler: Optional<ChannelHandler<StreamReleased>> = .none,
-    sink_released_handler: Optional<ChannelHandler<StreamReleased>> = .none
+    source_released: Optional<ChannelHandler<StreamReleased>> = .none,
+    sink_released: Optional<ChannelHandler<StreamReleased>> = .none,
+    handler: @escaping ChannelHandler<Data>
   ) {
     // Create the data channel
-    self.data_channel = Channel(handler: data_handler)
+    self.data_channel = Channel(handler: handler)
     
     // Create the source closed notification channel only if a handler is provided
-    self.source_released_channel = source_released_handler.transform { handler in
+    self.source_released_channel = source_released.transform { handler in
       Channel(handler: handler)
     }
     
     // Create the sink closed notification channel only if a handler is provided
-    self.sink_released_channel = sink_released_handler.transform { handler in
+    self.sink_released_channel = sink_released.transform { handler in
       Channel(handler: handler)
     }
   }

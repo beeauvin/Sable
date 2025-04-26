@@ -24,24 +24,24 @@ struct StreamTests {
   // MARK: - Initialization Tests
   
   @Test("initializes with data handler only")
-  func initializes_with_data_handler_only() throws {
+  func initializes_with_handler_only() throws {
     let handler: ChannelHandler<TestData> = { _ in }
     
-    let _ = Stream(data_handler: handler)
+    let _ = Stream(handler: handler)
     
     // No assertion needed - the test passes if initialization doesn't throw
   }
   
   @Test("initializes with all handlers")
   func initializes_with_all_handlers() throws {
-    let data_handler: ChannelHandler<TestData> = { _ in }
-    let source_released_handler: ChannelHandler<StreamReleased> = { _ in }
-    let sink_released_handler: ChannelHandler<StreamReleased> = { _ in }
+    let handler: ChannelHandler<TestData> = { _ in }
+    let source_released: ChannelHandler<StreamReleased> = { _ in }
+    let sink_released: ChannelHandler<StreamReleased> = { _ in }
     
     let _ = Stream(
-      data_handler: data_handler,
-      source_released_handler: source_released_handler,
-      sink_released_handler: sink_released_handler
+      source_released: source_released,
+      sink_released: sink_released,
+      handler: handler
     )
     
     // No assertion needed - the test passes if initialization doesn't throw
@@ -50,19 +50,19 @@ struct StreamTests {
   // MARK: - Send Tests
   
   @Test("send delivers pulse to data handler")
-  func send_delivers_pulse_to_data_handler() async throws {
+  func send_delivers_pulse_to_handler() async throws {
     // Given
     let pulse = create_test_pulse()
     let expected_message = pulse.data.message
     
     // When/Then
     try await confirmation(expectedCount: 1) { (confirm) async throws -> Void in
-      let data_handler: ChannelHandler<TestData> = { received_pulse in
+      let handler: ChannelHandler<TestData> = { received_pulse in
         #expect(received_pulse.data.message == expected_message)
         confirm()
       }
       
-      let stream = Stream(data_handler: data_handler)
+      let stream = Stream(handler: handler)
       let result = await stream.send(pulse)
       try await Task.sleep(for: .milliseconds(100))
       
@@ -78,9 +78,9 @@ struct StreamTests {
   func send_returns_error_when_stream_released() async throws {
     // Given
     let pulse = create_test_pulse()
-    let data_handler: ChannelHandler<TestData> = { _ in }
+    let handler: ChannelHandler<TestData> = { _ in }
     
-    let stream = Stream(data_handler: data_handler)
+    let stream = Stream(handler: handler)
     
     // When
     let release_result = await stream.release()
@@ -107,9 +107,9 @@ struct StreamTests {
   @Test("release succeeds")
   func release_succeeds() async throws {
     // Given
-    let data_handler: ChannelHandler<TestData> = { _ in }
+    let handler: ChannelHandler<TestData> = { _ in }
     
-    let stream = Stream(data_handler: data_handler)
+    let stream = Stream(handler: handler)
     
     // When
     let result = await stream.release()
@@ -125,9 +125,9 @@ struct StreamTests {
   @Test("release fails when already released")
   func release_fails_when_already_released() async throws {
     // Given
-    let data_handler: ChannelHandler<TestData> = { _ in }
+    let handler: ChannelHandler<TestData> = { _ in }
     
-    let stream = Stream(data_handler: data_handler)
+    let stream = Stream(handler: handler)
     
     // When
     let first_result = await stream.release()
@@ -152,18 +152,18 @@ struct StreamTests {
   // MARK: - Notification Tests
   
   @Test("release notifies source released handler")
-  func release_notifies_source_released_handler() async throws {
+  func release_notifies_source_released() async throws {
     // When/Then
     try await confirmation(expectedCount: 1) { (confirm) async throws -> Void in
-      let data_handler: ChannelHandler<TestData> = { _ in }
+      let handler: ChannelHandler<TestData> = { _ in }
       
-      let source_released_handler: ChannelHandler<StreamReleased> = { _ in
+      let source_released: ChannelHandler<StreamReleased> = { _ in
         confirm()
       }
       
       let stream = Stream(
-        data_handler: data_handler,
-        source_released_handler: source_released_handler
+        source_released: source_released,
+        handler: handler
       )
       
       let _ = await stream.release()
@@ -172,18 +172,18 @@ struct StreamTests {
   }
   
   @Test("release notifies sink released handler")
-  func release_notifies_sink_released_handler() async throws {
+  func release_notifies_sink_released() async throws {
     // When/Then
     try await confirmation(expectedCount: 1) { (confirm) async throws -> Void in
-      let data_handler: ChannelHandler<TestData> = { _ in }
+      let handler: ChannelHandler<TestData> = { _ in }
       
-      let sink_released_handler: ChannelHandler<StreamReleased> = { _ in
+      let sink_released: ChannelHandler<StreamReleased> = { _ in
         confirm()
       }
       
       let stream = Stream(
-        data_handler: data_handler,
-        sink_released_handler: sink_released_handler
+        sink_released: sink_released,
+        handler: handler
       )
       
       let _ = await stream.release()
@@ -195,20 +195,20 @@ struct StreamTests {
   func release_notifies_both_handlers() async throws {
     // When/Then
     try await confirmation(expectedCount: 2) { (confirm) async throws -> Void in
-      let data_handler: ChannelHandler<TestData> = { _ in }
+      let handler: ChannelHandler<TestData> = { _ in }
       
-      let source_released_handler: ChannelHandler<StreamReleased> = { _ in
+      let source_released: ChannelHandler<StreamReleased> = { _ in
         confirm()
       }
       
-      let sink_released_handler: ChannelHandler<StreamReleased> = { _ in
+      let sink_released: ChannelHandler<StreamReleased> = { _ in
         confirm()
       }
       
       let stream = Stream(
-        data_handler: data_handler,
-        source_released_handler: source_released_handler,
-        sink_released_handler: sink_released_handler
+        source_released: source_released,
+        sink_released: sink_released,
+        handler: handler
       )
       
       let _ = await stream.release()
