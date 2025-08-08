@@ -36,11 +36,11 @@ struct StreamTests {
   func initializes_with_all_handlers() throws {
     let handler: ChannelHandler<TestData> = { _ in }
     let source_released: ChannelHandler<StreamReleased> = { _ in }
-    let sink_released: ChannelHandler<StreamReleased> = { _ in }
+    let anchor_released: ChannelHandler<StreamReleased> = { _ in }
     
     let _ = Stream(
       source_released: source_released,
-      sink_released: sink_released,
+      anchor_released: anchor_released,
       handler: handler
     )
     
@@ -171,18 +171,18 @@ struct StreamTests {
     }
   }
   
-  @Test("release notifies sink released handler")
-  func release_notifies_sink_released() async throws {
+  @Test("release notifies anchor released handler")
+  func release_notifies_anchor_released() async throws {
     // When/Then
     try await confirmation(expectedCount: 1) { (confirm) async throws -> Void in
       let handler: ChannelHandler<TestData> = { _ in }
       
-      let sink_released: ChannelHandler<StreamReleased> = { _ in
+      let anchor_released: ChannelHandler<StreamReleased> = { _ in
         confirm()
       }
       
       let stream = Stream(
-        sink_released: sink_released,
+        anchor_released: anchor_released,
         handler: handler
       )
       
@@ -201,13 +201,13 @@ struct StreamTests {
         confirm()
       }
       
-      let sink_released: ChannelHandler<StreamReleased> = { _ in
+      let anchor_released: ChannelHandler<StreamReleased> = { _ in
         confirm()
       }
       
       let stream = Stream(
         source_released: source_released,
-        sink_released: sink_released,
+        anchor_released: anchor_released,
         handler: handler
       )
       
