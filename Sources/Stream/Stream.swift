@@ -13,39 +13,17 @@ import Obsidian
 /// which offers unidirectional fire-and-forget messaging, a `Stream` establishes a
 /// relationship where both ends can be notified when either side releases the connection.
 ///
-/// This bidirectional lifecycle awareness enables components to properly clean up resources,
-/// disconnect dependencies, or switch to alternative communication paths when a connection
-/// is lost. The `Stream` conforms to `Channeling` to enable seamless integration with
-/// existing channel-based architectures.
-///
-/// Key features:
-/// - Unique identification through UUID for stream tracking in complex systems
-/// - Bidirectional lifecycle awareness through notification channels
-/// - Type-safe data passing with Pulse encapsulation
-/// - Actor isolation for thread safety
-/// - Conformance to `Channeling` for interoperability with regular channels
-/// - Clean resource management when streams are released
-///
-/// Streams maintain three internal channels:
-/// - A primary data channel for the main message flow
-/// - Two notification channels for lifecycle events (source release and sink release)
-///
-/// This architecture enables robust connection management in distributed systems where
-/// components need to react appropriately when their communication partners disconnect.
-///
-/// Example usage:
+/// Streams can be used directly through the Channeling interface:
 ///
 /// ```swift
 /// // Create a stream with data and lifecycle handlers
 /// let resource_stream = Stream(
 ///   source_released: { released_pulse in
 ///     // Handle source closing the stream
-///     // Can access released_pulse.stream_id directly or
-///     // released_pulse.meta.source.id for the same information
 ///     await resource_service.disconnect_source()
 ///   },
-///   sink_released: { released_pulse in
-///     // Handle sink closing the stream
+///   anchor_released: { released_pulse in
+///     // Handle anchor closing the stream
 ///     await resource_service.release_resources()
 ///   },
 ///   handler: { pulse in
@@ -62,9 +40,6 @@ import Obsidian
 /// ```
 final public actor Stream<Data: Pulsable>: Channeling, Representable {
   /// Unique identifier for this stream
-  ///
-  /// This ID allows for proper identification of the stream in release notifications
-  /// and enables tracking in systems that manage multiple streams, such as Deltas.
   public let id: UUID = UUID()
   
   // Primary data channel from source to sink
@@ -73,8 +48,8 @@ final public actor Stream<Data: Pulsable>: Channeling, Representable {
   // Source closure notification channel
   private var source_released_channel: Optional<Channel<StreamReleased>>
   
-  // Sink closure notification channel
-  private var sink_released_channel: Optional<Channel<StreamReleased>>
+  // Anchor closure notification channel
+  private var anchor_released_channel: Optional<Channel<StreamReleased>>
   
   /// Creates a new stream with the specified handlers.
   ///
@@ -92,13 +67,10 @@ final public actor Stream<Data: Pulsable>: Channeling, Representable {
   /// // Create a stream with both lifecycle handlers
   /// let full_stream = Stream(
   ///   source_released: { released_pulse in
-  ///     // Can access the stream ID through both:
-  ///     // released_pulse.stream_id (direct)
-  ///     // released_pulse.meta.source.id (metadata)
   ///     handle_source_disconnect()
   ///   },
-  ///   sink_released: { released_pulse in
-  ///     handle_sink_disconnect()
+  ///   anchor_released: { released_pulse in
+  ///     handle_anchor_disconnect()
   ///   },
   ///   handler: message_processor.handle
   /// )
@@ -117,11 +89,11 @@ final public actor Stream<Data: Pulsable>: Channeling, Representable {
   ///
   /// - Parameters:
   ///   - source_released: Optional handler notified when source closes the stream
-  ///   - sink_released: Optional handler notified when sink closes the stream
-  ///   - handler: Handler that processes data flowing from source to sink
+  ///   - anchor_released: Optional handler notified when anchor closes the stream
+  ///   - handler: Handler that processes data flowing from source to anchor
   public init(
     source_released: Optional<ChannelHandler<StreamReleased>> = .none,
-    sink_released: Optional<ChannelHandler<StreamReleased>> = .none,
+    anchor_released: Optional<ChannelHandler<StreamReleased>> = .none,
     handler: @escaping ChannelHandler<Data>
   ) {
     // Create the data channel
@@ -132,8 +104,8 @@ final public actor Stream<Data: Pulsable>: Channeling, Representable {
       Channel(handler: handler)
     }
     
-    // Create the sink closed notification channel only if a handler is provided
-    self.sink_released_channel = sink_released.transform { handler in
+    // Create the anchor closed notification channel only if a handler is provided
+    self.anchor_released_channel = anchor_released.transform { handler in
       Channel(handler: handler)
     }
   }
@@ -207,7 +179,7 @@ final public actor Stream<Data: Pulsable>: Channeling, Representable {
       return .none
     }
     
-    sink_released_channel = await sink_released_channel.transform { channel in
+    anchor_released_channel = await anchor_released_channel.transform { channel in
       await channel.send(release_pulse)
       await channel.release()
       return .none
