@@ -20,13 +20,13 @@ jobs:
     name: test with swift ${{ matrix.swift }} on ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-15, macos-14] # ubuntu-latest
+        os: [macos-15, macos-14, ubuntu-latest]
         swift: ["6.1", "6.0"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: swift-actions/setup-swift@v2.3.0
+      - uses: beeauvin/setup-swiftly@v1
         with:
-          swift-version: ${{ matrix.swift }}
+          version: ${{ matrix.swift }}
       - uses: actions/checkout@v4
       - name: test
         run: swift test --parallel --enable-code-coverage
