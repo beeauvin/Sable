@@ -38,7 +38,7 @@ import Obsidian
 /// // Release the stream when no longer needed
 /// await resource_stream.release()
 /// ```
-final public actor Stream<Data: Pulsable>: Channeling, Representable {
+final public actor Stream<Data: Pulsable>: Streaming {
   /// Unique identifier for this stream
   public let id: UUID = UUID()
   
