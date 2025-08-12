@@ -24,9 +24,9 @@ jobs:
         swift: ["6.1", "6.0"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: beeauvin/setup-swiftly@v1
+      - uses: beeauvin/swiftly-swift@v1
         with:
-          version: ${{ matrix.swift }}
+          swift-version: ${{ matrix.swift }}
       - uses: actions/checkout@v4
       - name: test
         run: swift test --parallel --enable-code-coverage
