@@ -5,6 +5,13 @@
 
 version: 2
 updates:
+  - package-ecosystem: swift
+    open-pull-requests-limit: 10
+    directory: /
+    schedule:
+      interval: weekly
+    assignees:
+      - beeauvin
   - package-ecosystem: github-actions
     open-pull-requests-limit: 10
     directory: /
