@@ -12,11 +12,11 @@ import Obsidian
 /// wrapping one. This allows for consistent usage patterns and enables
 /// composition and delegation without tight coupling to the concrete `Channel` type.
 ///
-/// Implementers of this protocol must provide the ability to:
+/// The protocol focuses on the essential operation of message delivery:
 /// - Send a strongly-typed pulse to a handler
-/// - Release the channel, preventing further message processing
 ///
-/// Both operations return a `ChannelResult` to enable proper error handling.
+/// Lifecycle management is handled through Swift's standard reference counting,
+/// making the interface simple and predictable.
 ///
 /// ```swift
 /// struct ChannelWrapper<Data: Pulsable>: Channeling {
@@ -26,12 +26,8 @@ import Obsidian
 ///     self.inner_channel = Channel(handler: handler)
 ///   }
 ///
-///   func send(_ pulse: Pulse<Data>) async -> ChannelResult {
-///     return await inner_channel.send(pulse)
-///   }
-///
-///   func release() async -> ChannelResult {
-///     return await inner_channel.release()
+///   func send(_ pulse: Pulse<Data>) async {
+///     await inner_channel.send(pulse)
 ///   }
 /// }
 /// ```
@@ -45,11 +41,5 @@ public protocol Channeling<Data> {
   /// Sends a pulse to this channel for processing.
   ///
   /// - Parameter pulse: The typed pulse to send through this channel
-  /// - Returns: A result indicating success or a specific channel error
-  func send(_ pulse: Pulse<Data>) async -> ChannelResult
-  
-  /// Releases this channel, preventing further pulse processing.
-  ///
-  /// - Returns: A result indicating success or a specific channel error
-  func release() async -> ChannelResult
+  func send(_ pulse: Pulse<Data>) async
 }

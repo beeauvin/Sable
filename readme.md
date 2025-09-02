@@ -92,7 +92,7 @@ architecture toward precise, purposeful connections rather than generic, catch-a
 - **Memory Safety**: Designed with proper resource lifecycle management
 - **Debugging Support**: Debug-specific features to enhance visibility during development
 - **Typed Message Handling**: Strongly-typed channels for processing pulses with guaranteed delivery
-- **Actor-Isolated Channels**: Ownership model ensuring proper resource lifecycle management
+- **Simple Lifecycle Management**: Automatic resource cleanup through Swift's reference counting
 - **Priority-Based Processing**: Task priority inheritance for appropriate message handling
 - **Safe Error Handling**: Result-based error handling without throwing functions
 
@@ -164,10 +164,10 @@ let third = Pulse.Respond(
 // second.meta.echoes?.id == original.id
 ```
 
-### Typed Channel System
+### Simple Channel System
 
 Sable's Channel system provides a safe, actor-isolated mechanism for delivering strongly-typed
-pulse messages to registered handlers:
+pulse messages to registered handlers. Channels are designed for simplicity and performance:
 
 ```swift
 // Create a channel with a handler function
@@ -175,27 +175,50 @@ let auth_channel = Channel { pulse in
     await process_auth_event(pulse.data)
 }
 
-// Send a pulse to a channel
-let result = await auth_channel.send(login_pulse)
+// Send pulses through the channel
+await auth_channel.send(login_pulse)
 
-// Release a channel when no longer needed
-await auth_channel.release()
+// Channels clean up automatically when they go out of scope
 ```
 
-Channels follow Swift's ownership model, where any code with a reference can release it:
+**Lifecycle Considerations**: Channels maintain strong references to their handlers, making them
+perfect for long-lived services or components with coupled lifetimes. The handler remains alive as
+long as the channel exists, so consider this when using temporary or one-off handlers.
+
+### Advanced Stream System
+
+For more complex scenarios requiring explicit lifecycle management and bidirectional awareness,
+Sable provides Streams:
 
 ```swift
-// Attempt to release a channel
-switch await channel.release() {
-case .success:
-    // Channel was successfully released
-    log_event("Channel successfully released")
-    
-case .failure(.released):
-    // Handle already released error
-    log_warning("Channel was already released")
-}
+// Create a stream with lifecycle handlers
+let resource_stream = Stream(
+    source_released: { released_pulse in
+        // Handle source closing the stream
+        await resource_service.disconnect_source()
+    },
+    anchor_released: { released_pulse in
+        // Handle anchor closing the stream
+        await resource_service.release_resources()
+    },
+    handler: { pulse in
+        // Process data flowing through the stream
+        await resource_service.process(pulse.data)
+    }
+)
+
+// Send data through the stream
+let result = await resource_stream.send(data_pulse)
+
+// Explicitly release when needed
+await resource_stream.release()
 ```
+
+Streams are perfect when you need:
+- Notification when connections close
+- Explicit lifecycle control
+- Error handling for connection state
+- Bidirectional awareness between endpoints
 
 ### Metadata & Context
 
@@ -211,12 +234,15 @@ Sable provides a cohesive, unified framework for reactive, event-driven systems:
 
 ### Current Components
 
-- **Core Messaging Primitives**: The Pulse system provides the fundamental message types and metadata handling.
-- **Channel System**: Strongly-typed message handlers with guaranteed delivery and ownership management.
+- **Core Messaging Primitives**: The Pulse system provides the fundamental message types and 
+  metadata handling.
+- **Channel System**: Simple, strongly-typed message handlers with automatic lifecycle management.
+- **Stream System**: Advanced bidirectional communication with explicit lifecycle control.
 
 ### Coming Soon
 
-- **Transmission Primitives**: Advanced message routing, filtering, and processing across actor boundaries.
+- **Transmission Primitives**: Advanced message routing, filtering, and processing across actor
+  boundaries.
 
 ### Related Projects
 
@@ -231,7 +257,7 @@ Add Sable to your Swift package dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/beeauvin/Sable.git", from: "0.3.0")
+    .package(url: "https://github.com/beeauvin/Sable.git", from: "0.4.0")
 ]
 ```
 
@@ -312,23 +338,19 @@ actor AuthenticationService {
 
 ### Channel-Based Message Handling
 
-Implement dedicated message handlers using the Channel system:
+Implement dedicated message handlers using the simple Channel system:
 
 ```swift
 // Define a service that processes specific message types
 actor NotificationService {
-    // Store channels as properties
+    // Store channel as a property
     private let event_channel: Channel<SystemEvent>
-    private let release_key: UUID
     
     init() {
-        // Create a channel with a generated key
-        let (channel, key) = Channel.Create { pulse in
+        // Create a channel with a handler
+        self.event_channel = Channel { pulse in
             await self.process_event(pulse.data)
         }
-        
-        self.event_channel = channel
-        self.release_key = key
     }
     
     // Method to process events internally
@@ -341,10 +363,7 @@ actor NotificationService {
         return event_channel
     }
     
-    // Clean up resources when shutting down
-    func shutdown() async {
-        await event_channel.release(key: release_key)
-    }
+    // No explicit cleanup needed - channel cleans up when service deallocates
 }
 
 // In another component, use the service's channel
@@ -365,6 +384,20 @@ actor EventCoordinator {
     }
 }
 ```
+
+### Choosing Between Channels and Streams
+
+**Use Channels when:**
+- You need simple, reliable message delivery
+- Components have coupled lifetimes
+- You want automatic resource management
+- Fire-and-forget messaging is sufficient
+
+**Use Streams when:**
+- You need explicit lifecycle control
+- Components need to know when connections close
+- Error handling for connection state is important
+- Bidirectional awareness is valuable
 
 ## License
 

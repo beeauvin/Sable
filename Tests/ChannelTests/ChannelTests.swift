@@ -52,90 +52,62 @@ struct ChannelTests {
       }
       
       let channel = Channel(handler: handler)
-      let result = await channel.send(pulse)
+      await channel.send(pulse)
       try await Task.sleep(for: .milliseconds(100))
+    }
+  }
+  
+  @Test("send processes multiple pulses")
+  func send_processes_multiple_pulses() async throws {
+    // Given
+    let pulse1 = Pulse(TestPulseData(message: "First"))
+    let pulse2 = Pulse(TestPulseData(message: "Second"))
+    let pulse3 = Pulse(TestPulseData(message: "Third"))
+    
+    // When/Then
+    try await confirmation(expectedCount: 3) { (confirm) async throws -> Void in
+      let handler: ChannelHandler<TestPulseData> = { received_pulse in
+        // Verify we received one of the expected messages
+        let message = received_pulse.data.message
+        #expect(["First", "Second", "Third"].contains(message))
+        confirm()
+      }
       
-      if case .success = result {
-        // Success case verified
-      } else {
-        #expect(Bool(false), "Expected success result from send")
-      }
+      let channel = Channel(handler: handler)
+      
+      await channel.send(pulse1)
+      await channel.send(pulse2)
+      await channel.send(pulse3)
+      
+      try await Task.sleep(for: .milliseconds(100))
     }
   }
   
-  @Test("send returns error when channel is released")
-  func send_returns_error_when_channel_released() async throws {
+  @Test("handler retains references as documented")
+  func handler_retains_references_as_documented() async throws {
     // Given
+    weak var weak_service: TestService?
     let pulse = create_test_pulse()
-    let handler: ChannelHandler<TestPulseData> = { _ in }
-    
-    let channel = Channel(handler: handler)
     
     // When
-    let release_result = await channel.release()
-    if case .failure = release_result {
-      #expect(Bool(false), "Channel release should have succeeded")
-    }
-    
-    // Then
-    let send_result = await channel.send(pulse)
-    
-    if case .failure(let error) = send_result {
-      if case .released = error {
-        // Success - got the released error as expected
-      } else {
-        #expect(Bool(false), "Expected released error but got different error")
+    let channel = {
+      let service = TestService()
+      weak_service = service
+      
+      let handler: ChannelHandler<TestPulseData> = { _ in
+        // Reference the service to create a retention cycle
+        await service.process_message()
       }
-    } else {
-      #expect(Bool(false), "Expected failure result from send")
-    }
-  }
-  
-  // MARK: - Release Tests
-  
-  @Test("release succeeds")
-  func release_succeeds() async throws {
-    // Given
-    let handler: ChannelHandler<TestPulseData> = { _ in }
+      
+      return Channel(handler: handler)
+    }()
     
-    let channel = Channel(handler: handler)
+    // Then - service should still be alive because channel retains the handler
+    #expect(weak_service != nil, "Service should be retained by channel's handler")
     
-    // When
-    let result = await channel.release()
-    
-    // Then
-    if case .success = result {
-      // Success case verified
-    } else {
-      #expect(Bool(false), "Expected success result from release")
-    }
-  }
-  
-  @Test("release fails when already released")
-  func release_fails_when_already_released() async throws {
-    // Given
-    let handler: ChannelHandler<TestPulseData> = { _ in }
-    
-    let channel = Channel(handler: handler)
-    
-    // When
-    let first_result = await channel.release()
-    if case .failure = first_result {
-      #expect(Bool(false), "First channel release should have succeeded")
-    }
-    
-    // Then
-    let second_result = await channel.release()
-    
-    if case .failure(let error) = second_result {
-      if case .released = error {
-        // Success - got the released error as expected
-      } else {
-        #expect(Bool(false), "Expected released error but got different error")
-      }
-    } else {
-      #expect(Bool(false), "Expected failure result from second release")
-    }
+    // Clean up
+    await channel.send(pulse)
+    try await Task.sleep(for: .milliseconds(100))
   }
   
   // MARK: - Task Priority Tests
@@ -154,8 +126,39 @@ struct ChannelTests {
       }
       
       let channel = Channel(handler: handler)
-      let _ = await channel.send(pulse)
+      await channel.send(pulse)
       try await Task.sleep(for: .milliseconds(100))
+    }
+  }
+  
+  @Test("send preserves different priority levels")
+  func send_preserves_different_priority_levels() async throws {
+    // Given
+    let low_pulse = create_test_pulse().priority(.low)
+    let high_pulse = create_test_pulse().priority(.high)
+    
+    // When/Then
+    try await confirmation(expectedCount: 2) { (confirm) async throws -> Void in
+      let handler: ChannelHandler<TestPulseData> = { received_pulse in
+        let current_priority = Task.currentPriority
+        let expected_priority = received_pulse.priority
+        #expect(current_priority == expected_priority)
+        confirm()
+      }
+      
+      let channel = Channel(handler: handler)
+      await channel.send(low_pulse)
+      await channel.send(high_pulse)
+      try await Task.sleep(for: .milliseconds(100))
+    }
+  }
+  
+  // MARK: - Helper Types
+  
+  actor TestService {
+    func process_message() async {
+      // Simulate some work
+      try? await Task.sleep(for: .milliseconds(10))
     }
   }
 }
