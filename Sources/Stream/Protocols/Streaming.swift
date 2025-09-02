@@ -7,28 +7,56 @@ import Obsidian
 
 /// A protocol that defines the core operations for stream-like components.
 ///
-/// `Streaming` extends the basic `Channeling` interface with identity capabilities
-/// through `Representable` conformance, enabling streams to be uniquely identified
-/// and referenced throughout the system. This combination provides both the core
-/// messaging operations and the identity information needed for stream lifecycle
-/// management and debugging.
+/// `Streaming` provides the interface for bidirectional communication pathways with
+/// explicit lifecycle management. Unlike the simpler `Channeling` protocol, streaming
+/// components support release operations and provide detailed result information about
+/// their state transitions.
 ///
-/// Streams differ from channels in their intended usage patterns:
-/// - Channels provide simple unidirectional message delivery
-/// - Streams establish bidirectional relationships with lifecycle awareness
-/// - Streams can be identified and referenced by their unique identity
+/// Streams are designed for scenarios where:
+/// - Components need to be notified when connections are closed
+/// - Explicit lifecycle control is required
+/// - Error handling for connection state is important
+/// - Bidirectional awareness between endpoints is valuable
 ///
-/// The protocol inherits the core messaging operations from `Channeling`:
-/// - `send(_:)` for delivering typed pulses to handlers
-/// - `release()` for closing the stream and preventing further processing
+/// The protocol combines identity capabilities from `Representable` with messaging
+/// operations that return detailed results about success or failure states.
 ///
-/// And adds identity capabilities from `Representable`:
-/// - Unique identification through `id` property
-/// - Human-readable naming through `name` property
-/// - Consistent description formatting
+/// ```swift
+/// struct StreamWrapper<Data: Pulsable>: Streaming {
+///   private let inner_stream: Stream<Data>
 ///
-/// This design enables building more sophisticated stream-based architectures
-/// while maintaining compatibility with existing channel-based code through
-/// the shared `Channeling` interface.
+///   var id: UUID { inner_stream.id }
+///   var name: String { "Wrapper:\(inner_stream.name)" }
+///
+///   init(handler: @escaping ChannelHandler<Data>) {
+///     self.inner_stream = Stream(handler: handler)
+///   }
+///
+///   func send(_ pulse: Pulse<Data>) async -> StreamResult {
+///     return await inner_stream.send(pulse)
+///   }
+///
+///   func release() async -> StreamResult {
+///     return await inner_stream.release()
+///   }
+/// }
 /// ```
-public protocol Streaming<Data>: Channeling, Representable where Data: Pulsable {}
+///
+/// This protocol enables building sophisticated stream-based architectures with
+/// predictable lifecycle management while maintaining compatibility through
+/// composition and delegation patterns.
+public protocol Streaming<Data>: Representable where Data: Pulsable {
+  /// The type of data this stream can handle
+  associatedtype Data: Pulsable
+  
+  /// Sends a pulse to this stream for processing.
+  ///
+  /// - Parameter pulse: The typed pulse to send through this stream
+  /// - Returns: A result indicating success or a specific stream error
+  func send(_ pulse: Pulse<Data>) async -> StreamResult
+  
+  /// Releases this stream, preventing further pulse processing.
+  ///
+  /// - Returns: A result indicating success or a specific stream error
+  func release() async -> StreamResult
+}

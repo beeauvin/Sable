@@ -8,31 +8,45 @@ import Obsidian
 /// A typed message handler that delivers pulses to a registered handler function.
 ///
 /// `Channel` provides a safe, actor-isolated mechanism for delivering strongly-typed
-/// pulse messages to registered handlers. It implements a simple ownership model
-/// where the component that has a reference to the channel can release it when needed.
+/// pulse messages to registered handlers. Built on the lightweight `Pipe` primitive,
+/// it provides actor-based thread safety while maintaining high performance for
+/// message delivery operations.
 ///
-/// Channels guarantee that any pulse sent to an unreleased channel will be delivered
-/// to its handler, even if the handler executes asynchronously. Each delivered pulse
-/// maintains its specified priority through the handling chain.
+/// Channels use a fire-and-forget model for pulse delivery, spawning tasks that
+/// inherit the priority of the pulse being processed. This approach ensures that
+/// channel operations remain non-blocking while maintaining appropriate prioritization.
 ///
 /// ```swift
 /// // Create a channel with a handler
 /// let auth_channel = Channel { pulse in
 ///   await process_auth_event(pulse.data)
 /// }
+///
+/// // Send pulses through the channel
+/// await auth_channel.send(login_pulse)
 /// ```
 ///
-/// Channels use a fire-and-forget model for pulse delivery, spawning tasks that
-/// inherit the priority of the pulse being processed. This approach ensures that
-/// channel operations remain non-blocking while maintaining appropriate prioritization.
+/// ## Lifecycle Considerations
+///
+/// Channel lifecycle is managed through Swift's automatic reference counting. The
+/// channel maintains a strong reference to its handler function, which means:
+///
+/// - The handler will remain alive as long as the channel exists
+/// - Components referenced by the handler will not be deallocated until the channel is released
+/// - Channels are ideal for long-lived services or components with coupled lifetimes
+/// - For more complex lifecycle management, consider using `Stream` instead
+///
+/// This design makes channels perfect for simple, persistent message routing but
+/// requires careful consideration when used with temporary or one-off handlers.
 final public actor Channel<Data: Pulsable>: Channeling {
-  /// Internal reference to the handler this Channel will send pulses to.
-  private var handler: Optional<ChannelHandler<Data>>
+  /// Internal pipe that handles the actual message delivery
+  private let pipe: Pipe<Data>
   
   /// Creates a new channel with the specified handler function.
   ///
-  /// This initializer creates a channel that can be released by any code
-  /// with a reference to it, following Swift's standard ownership model.
+  /// The channel will process all pulses sent to it using the provided handler,
+  /// executing each handler call in a separate task that inherits the pulse's
+  /// priority level.
   ///
   /// ```swift
   /// let event_channel = Channel { pulse in
@@ -42,7 +56,7 @@ final public actor Channel<Data: Pulsable>: Channeling {
   ///
   /// - Parameter handler: The function that will process pulses sent to this channel
   public init(handler: @escaping ChannelHandler<Data>) {
-    self.handler = handler
+    self.pipe = Pipe(handler: handler)
   }
   
   /// Sends a pulse to this channel for processing.
@@ -50,60 +64,17 @@ final public actor Channel<Data: Pulsable>: Channeling {
   /// This method delivers the provided pulse to the channel's registered handler
   /// function. Delivery happens asynchronously in a separate task that inherits
   /// the priority of the pulse, ensuring that high-priority pulses are processed
-  /// appropriately. If the channel has been released, the operation fails with
-  /// a `.released` error.
+  /// appropriately.
   ///
   /// ```swift
-  /// let result = await channel.send(login_pulse)
-  ///
-  /// if case .failure(.released) = result {
-  ///   // Channel was released, handle accordingly
-  ///   reconnect_channel()
-  /// }
+  /// await channel.send(login_pulse)
   /// ```
   ///
-  /// The channel guarantees that if it hasn't been released, the pulse will be
-  /// delivered to the handler, even if the handler executes asynchronously.
+  /// The channel guarantees that the pulse will be delivered to the handler,
+  /// with the handler executing asynchronously to maintain non-blocking behavior.
   ///
   /// - Parameter pulse: The typed pulse to send to this channel
-  /// - Returns: A result indicating success or a specific channel error
-  @discardableResult
-  public func send(_ pulse: Pulse<Data>) async -> ChannelResult {
-    return self.handler.transform { handler in
-      Task(priority: pulse.priority) { await handler(pulse) }
-      return ChannelResult.success
-    }.otherwise(ChannelResult.failure(.released))
-  }
-  
-  /// Releases this channel, preventing further pulse processing.
-  ///
-  /// This method deactivates the channel by clearing its handler reference,
-  /// preventing any further pulses from being processed.
-  ///
-  /// ```swift
-  /// // Release a channel
-  /// let result = await channel.release()
-  ///
-  /// if case .failure(.released) = result {
-  ///   log_warning("Channel was already released")
-  /// }
-  /// ```
-  ///
-  /// If the channel has already been released, the operation fails with a
-  /// `.released` error.
-  ///
-  /// - Returns: A result indicating success or a specific channel error
-  @discardableResult
-  public func release() async -> ChannelResult {
-    return self.handler.transform { handler in
-      self.handler = .none
-      return ChannelResult.success
-    }.otherwise(ChannelResult.failure(.released))
-  }
-  
-  /// Generally the release method should be called. There are some cases where this
-  /// can be relied on instead when no reference cycles are created.
-  deinit {
-    handler = .none
+  public func send(_ pulse: Pulse<Data>) async {
+    await pipe.send(pulse)
   }
 }

@@ -5,33 +5,33 @@
 
 import Obsidian
 
-/// Represents specific error conditions that can occur during channel operations.
+/// Represents specific error conditions that can occur during stream operations.
 ///
-/// `ChannelError` encapsulates the primary failure mode for channel operations:
-/// attempting to interact with a channel that has been released.
+/// `StreamError` encapsulates the primary failure mode for stream operations:
+/// attempting to interact with a stream that has been released.
 ///
-/// This error is returned as part of a `ChannelResult` rather than thrown,
+/// This error is returned as part of a `StreamResult` rather than thrown,
 /// aligning with Sable's design principle of non-throwing code. This approach
 /// encourages explicit error handling and predictable control flow.
 ///
 /// ```swift
-/// // Handle channel errors in a switch statement
+/// // Handle stream errors in a switch statement
 /// switch result {
 /// case .success:
 ///   continue_processing()
 ///
 /// case .failure(.released):
-///   reconnect_channel()
+///   reconnect_stream()
 /// }
 /// ```
 ///
 /// The error case is designed to provide just enough context for proper error
 /// handling without exposing unnecessary implementation details.
-@frozen public enum ChannelError: Error {
-  /// Indicates that the channel has been released and can no longer process pulses.
+@frozen public enum StreamError: Error {
+  /// Indicates that the stream has been released and can no longer process pulses.
   ///
-  /// This error occurs when attempting to send a pulse to a channel that has been
-  /// explicitly released, or when attempting to release a channel that has
+  /// This error occurs when attempting to send a pulse to a stream that has been
+  /// explicitly released, or when attempting to release a stream that has
   /// already been released.
   case released
 }
