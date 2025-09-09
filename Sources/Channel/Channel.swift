@@ -75,7 +75,7 @@ final public actor Channel<Data: Pulsable>: Channeling {
   ///
   /// - Parameter pulse: The typed pulse to send to this channel
   public nonisolated func send(_ pulse: Pulse<Data>) {
-    Task.detached(priority: pulse.priority) {
+    Task(priority: pulse.priority) {
       await self.pipe.send(pulse)
     }
   }
