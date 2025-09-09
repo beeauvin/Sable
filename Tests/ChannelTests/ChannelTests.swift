@@ -52,7 +52,7 @@ struct ChannelTests {
       }
       
       let channel = Channel(handler: handler)
-      await channel.send(pulse)
+      channel.send(pulse)
       try await Task.sleep(for: .milliseconds(100))
     }
   }
@@ -75,9 +75,9 @@ struct ChannelTests {
       
       let channel = Channel(handler: handler)
       
-      await channel.send(pulse1)
-      await channel.send(pulse2)
-      await channel.send(pulse3)
+      channel.send(pulse1)
+      channel.send(pulse2)
+      channel.send(pulse3)
       
       try await Task.sleep(for: .milliseconds(100))
     }
@@ -106,10 +106,10 @@ struct ChannelTests {
     #expect(weak_service != nil, "Service should be retained by channel's handler")
     
     // Clean up
-    await channel.send(pulse)
+    channel.send(pulse)
     try await Task.sleep(for: .milliseconds(100))
   }
-  
+
   // MARK: - Task Priority Tests
   
   @Test("send creates task with pulse priority")
@@ -126,7 +126,7 @@ struct ChannelTests {
       }
       
       let channel = Channel(handler: handler)
-      await channel.send(pulse)
+      channel.send(pulse)
       try await Task.sleep(for: .milliseconds(100))
     }
   }
@@ -147,8 +147,8 @@ struct ChannelTests {
       }
       
       let channel = Channel(handler: handler)
-      await channel.send(low_pulse)
-      await channel.send(high_pulse)
+      channel.send(low_pulse)
+      channel.send(high_pulse)
       try await Task.sleep(for: .milliseconds(100))
     }
   }

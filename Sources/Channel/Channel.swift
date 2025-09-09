@@ -67,14 +67,16 @@ final public actor Channel<Data: Pulsable>: Channeling {
   /// appropriately.
   ///
   /// ```swift
-  /// await channel.send(login_pulse)
+  /// channel.send(login_pulse)
   /// ```
   ///
   /// The channel guarantees that the pulse will be delivered to the handler,
   /// with the handler executing asynchronously to maintain non-blocking behavior.
   ///
   /// - Parameter pulse: The typed pulse to send to this channel
-  public func send(_ pulse: Pulse<Data>) async {
-    await pipe.send(pulse)
+  public nonisolated func send(_ pulse: Pulse<Data>) {
+    Task.detached(priority: pulse.priority) {
+      await self.pipe.send(pulse)
+    }
   }
 }
