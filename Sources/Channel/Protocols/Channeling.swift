@@ -41,5 +41,5 @@ public protocol Channeling<Data> {
   /// Sends a pulse to this channel for processing.
   ///
   /// - Parameter pulse: The typed pulse to send through this channel
-  func send(_ pulse: Pulse<Data>) async
+  func send(_ pulse: Pulse<Data>)
 }
