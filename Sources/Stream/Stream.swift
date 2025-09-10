@@ -6,7 +6,7 @@
 import Obsidian
 
 /// A communication pathway with built-in bidirectional lifecycle awareness. Built on
-/// `Pipe` primitives for high-performance message delivery.
+/// `Channel` primitives for high-performance message delivery.
 ///
 /// `Stream` extends Sable's messaging architecture by providing a connection between
 /// components with mutual awareness of lifecycle events. Unlike a regular `Channel`,
@@ -41,26 +41,26 @@ import Obsidian
 final public actor Stream<Data: Pulsable>: Streaming {
   /// Unique identifier for this stream
   public let id: UUID = UUID()
-  
-  // Primary data pipe from source to sink
-  private var data_pipe: Optional<Pipe<Data>>
-  
-  // Source closure notification pipe
-  private var source_released_pipe: Optional<Pipe<StreamReleased>>
-  
-  // Anchor closure notification pipe
-  private var anchor_released_pipe: Optional<Pipe<StreamReleased>>
-  
+
+  // Primary data channel from source to sink
+  private var data_channel: Optional<Channel<Data>>
+
+  // Source closure notification channel
+  private var source_released_channel: Optional<Channel<StreamReleased>>
+
+  // Anchor closure notification channel
+  private var anchor_released_channel: Optional<Channel<StreamReleased>>
+
   /// Creates a new stream with the specified handlers.
   ///
-  /// This initializer establishes the three internal pipes that form the stream's
+  /// This initializer establishes the three internal channels that form the stream's
   /// communication infrastructure:
-  /// - A data pipe for the primary message flow
-  /// - Optional notification pipes for lifecycle events
+  /// - A data channel for the primary message flow
+  /// - Optional notification channels for lifecycle events
   ///
-  /// The notification pipes are only created if handlers are provided, allowing
+  /// The notification channels are only created if handlers are provided, allowing
   /// for efficient resource usage when full bidirectional awareness isn't needed.
-  /// Each notification pipe is dedicated to a specific direction of release
+  /// Each notification channel is dedicated to a specific direction of release
   /// notification, ensuring clear separation of concerns and predictable behavior.
   ///
   /// ```swift
@@ -96,27 +96,27 @@ final public actor Stream<Data: Pulsable>: Streaming {
     anchor_released: Optional<ChannelHandler<StreamReleased>> = .none,
     handler: @escaping ChannelHandler<Data>
   ) {
-    // Create the data pipe
-    self.data_pipe = Pipe(handler: handler)
-    
-    // Create the source closed notification pipe only if a handler is provided
-    self.source_released_pipe = source_released.transform { handler in
-      Pipe(handler: handler)
+    // Create the data channel
+    self.data_channel = Channel(handler: handler)
+
+    // Create the source closed notification channel only if a handler is provided
+    self.source_released_channel = source_released.transform { handler in
+      Channel(handler: handler)
     }
-    
-    // Create the anchor closed notification pipe only if a handler is provided
-    self.anchor_released_pipe = anchor_released.transform { handler in
-      Pipe(handler: handler)
+
+    // Create the anchor closed notification channel only if a handler is provided
+    self.anchor_released_channel = anchor_released.transform { handler in
+      Channel(handler: handler)
     }
   }
-  
+
   /// Sends data from the source to the sink.
   ///
-  /// This method forwards the provided pulse to the stream's internal data pipe
+  /// This method forwards the provided pulse to the stream's internal data channel
   /// for processing by the registered data handler. It follows the fire-and-forget
   /// pattern, but with additional checking for stream release status.
   ///
-  /// If the stream has been released (data_pipe is nil), the method immediately
+  /// If the stream has been released (data_channel is nil), the method immediately
   /// returns a failure result without attempting to send the pulse. This behavior
   /// ensures that attempts to use a released stream produce consistent, predictable
   /// responses rather than unexpected errors.
@@ -136,22 +136,22 @@ final public actor Stream<Data: Pulsable>: Streaming {
   /// - Returns: A result indicating success or a specific stream error
   @discardableResult
   public func send(_ pulse: Pulse<Data>) async -> StreamResult {
-    return await data_pipe.transform { pipe in
-      await pipe.send(pulse)
+    return data_channel.transform { channel in
+      channel.send(pulse)
       return StreamResult.success
     }.otherwise(StreamResult.failure(.released))
   }
-  
+
   /// Releases the stream, preventing further pulse processing.
   ///
   /// This method performs a complete shutdown of the stream by:
-  /// 1. Checking if the stream is already released (data_pipe is nil)
-  /// 2. Sending release notifications through both notification pipes (if they exist)
+  /// 1. Checking if the stream is already released (data_channel is nil)
+  /// 2. Sending release notifications through both notification channels (if they exist)
   ///    including the stream's unique ID both directly and via metadata
-  /// 3. Clearing all pipe references to allow proper resource cleanup
+  /// 3. Clearing all channel references to allow proper resource cleanup
   ///
   /// The release process follows a careful sequence to ensure that all notifications
-  /// are sent before the data pipe is cleared, providing connected components
+  /// are sent before the data channel is cleared, providing connected components
   /// with an opportunity to react to the stream closure.
   ///
   /// ```swift
@@ -170,21 +170,21 @@ final public actor Stream<Data: Pulsable>: Streaming {
   /// - Returns: A result indicating success or a specific stream error
   @discardableResult
   public func release() async -> StreamResult {
-    guard let _ = data_pipe else { return .failure(.released) }
+    guard let _ = data_channel else { return .failure(.released) }
     let release_pulse = Pulse(StreamReleased(stream_id: id)).from(self)
-    
-    source_released_pipe = await source_released_pipe.transform { pipe in
-      await pipe.send(release_pulse)
+
+    source_released_channel = source_released_channel.transform { channel in
+      channel.send(release_pulse)
       return .none
     }
-    
-    anchor_released_pipe = await anchor_released_pipe.transform { pipe in
-      await pipe.send(release_pulse)
+
+    anchor_released_channel = anchor_released_channel.transform { channel in
+      channel.send(release_pulse)
       return .none
     }
-    
-    data_pipe = .none
-    
+
+    data_channel = .none
+
     return .success
   }
 }

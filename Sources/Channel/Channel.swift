@@ -7,10 +7,9 @@ import Obsidian
 
 /// A typed message handler that delivers pulses to a registered handler function.
 ///
-/// `Channel` provides a safe, actor-isolated mechanism for delivering strongly-typed
-/// pulse messages to registered handlers. Built on the lightweight `Pipe` primitive,
-/// it provides actor-based thread safety while maintaining high performance for
-/// message delivery operations.
+/// `Channel` provides a safe mechanism for delivering strongly-typed pulse messages
+/// to registered handlers. It maintains high performance for message delivery operations
+/// while ensuring thread safety through task-based concurrency.
 ///
 /// Channels use a fire-and-forget model for pulse delivery, spawning tasks that
 /// inherit the priority of the pulse being processed. This approach ensures that
@@ -23,7 +22,7 @@ import Obsidian
 /// }
 ///
 /// // Send pulses through the channel
-/// await auth_channel.send(login_pulse)
+/// auth_channel.send(login_pulse)
 /// ```
 ///
 /// ## Lifecycle Considerations
@@ -38,10 +37,10 @@ import Obsidian
 ///
 /// This design makes channels perfect for simple, persistent message routing but
 /// requires careful consideration when used with temporary or one-off handlers.
-final public actor Channel<Data: Pulsable>: Channeling {
-  /// Internal pipe that handles the actual message delivery
-  private let pipe: Pipe<Data>
-  
+public struct Channel<Data: Pulsable>: Channeling, Sendable {
+  /// The handler function that processes pulses sent to this channel
+  private let handler: ChannelHandler<Data>
+
   /// Creates a new channel with the specified handler function.
   ///
   /// The channel will process all pulses sent to it using the provided handler,
@@ -56,9 +55,9 @@ final public actor Channel<Data: Pulsable>: Channeling {
   ///
   /// - Parameter handler: The function that will process pulses sent to this channel
   public init(handler: @escaping ChannelHandler<Data>) {
-    self.pipe = Pipe(handler: handler)
+    self.handler = handler
   }
-  
+
   /// Sends a pulse to this channel for processing.
   ///
   /// This method delivers the provided pulse to the channel's registered handler
@@ -72,11 +71,12 @@ final public actor Channel<Data: Pulsable>: Channeling {
   ///
   /// The channel guarantees that the pulse will be delivered to the handler,
   /// with the handler executing asynchronously to maintain non-blocking behavior.
+  /// Multiple threads can safely call this method concurrently.
   ///
   /// - Parameter pulse: The typed pulse to send to this channel
-  public nonisolated func send(_ pulse: Pulse<Data>) {
-    Task(priority: pulse.priority) {
-      await self.pipe.send(pulse)
+  public func send(_ pulse: Pulse<Data>) {
+    Task(priority: pulse.priority) { @Sendable in
+      await handler(pulse)
     }
   }
 }
