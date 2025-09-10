@@ -75,7 +75,7 @@ public struct Channel<Data: Pulsable>: Channeling, Sendable {
   ///
   /// - Parameter pulse: The typed pulse to send to this channel
   public func send(_ pulse: Pulse<Data>) {
-    Task(priority: pulse.priority) { @Sendable in
+    Task(priority: pulse.priority) {
       await handler(pulse)
     }
   }
